@@ -1,0 +1,44 @@
+{
+  "tests": [
+    {
+      "name": "Nume arhiva",
+      "setup": "",
+      "run": "unzip Etapa3.zip -d temp",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": null
+    },
+    {
+      "name": "make clean",
+      "setup": "",
+      "run": "make -C temp clean",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 1,
+      "points": null
+    },
+    {
+      "name": "make build",
+      "setup": "",
+      "run": "make -C temp build",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 5,
+      "points": null
+    },
+    {
+      "name": "make run",
+      "setup": "",
+      "run": "timeout -s 9 5 make -C temp run; code=$?; test $code -eq 137 || test $code -eq 0",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 5,
+      "points": null
+    }
+  ]
+}
