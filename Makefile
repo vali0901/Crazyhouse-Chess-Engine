@@ -23,3 +23,9 @@ $(PRGM): $(OBJS)
 clean:
 	rm -rf $(OBJS) $(OBJSH) $(DEPS) $(DEPSH)
 	rm -rf $(PRGM)
+
+run: Main
+	./Main
+
+zip:
+	zip -r Etapa3.zip *
