@@ -12,7 +12,7 @@ DEPS := $(OBJS:.o=.d)
 
 .PHONY: all clean
 
-all: $(PRGM)
+build: $(PRGM)
 
 $(PRGM): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LDLIBS) -o $@
