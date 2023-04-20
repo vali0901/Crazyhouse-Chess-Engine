@@ -81,5 +81,12 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/valentin/proiect-pa-2023-en-passant-1",
+            "binaryPath": "/home/valentin/proiect-pa-2023-en-passant-1/Main",
+            "binaryArgs": []
+        }
+    ]
 }
