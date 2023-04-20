@@ -35,4 +35,4 @@ run: Main
 	./Main
 
 zip:
-	zip -r Etapa3.zip ./src/* ./include/*
+	zip -r Etapa3.zip ./src/* ./include/* Makefile
