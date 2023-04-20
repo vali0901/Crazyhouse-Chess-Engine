@@ -12,7 +12,7 @@ DEPS := $(OBJS:.o=.d)
 
 .PHONY: all clean
 
-all: $(PRGM)
+build: $(PRGM)
 
 $(PRGM): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LDLIBS) -o $@
@@ -23,3 +23,9 @@ $(PRGM): $(OBJS)
 clean:
 	rm -rf $(OBJS) $(OBJSH) $(DEPS) $(DEPSH)
 	rm -rf $(PRGM)
+
+run: Main
+	./Main
+
+zip:
+	zip -r Etapa3.zip *

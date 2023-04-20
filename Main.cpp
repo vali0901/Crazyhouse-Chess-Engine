@@ -1,15 +1,22 @@
 
 #include <bits/stdc++.h>
-
+#include <iostream>
+#include <fstream>
 #include <cassert>
 
 #include "Bot.h"
 #include "Move.h"
 #include "Piece.h"
 #include "PlaySide.h"
+#include "Main.h"
 
 static PlaySide sideToMove;
 static PlaySide engineSide;
+std::ofstream *output;
+
+PlaySide getEngineSide() {
+  return engineSide;
+}
 
 static void toggleSideToMove() {
     static const PlaySide switchTable[] = {
@@ -261,10 +268,13 @@ class EngineComponents {
     } else {
       getline(scanner, nextCmd);
     }
+    *output << nextCmd << std::endl;
 
     std::stringstream command_stream(nextCmd);
     std::string command;
     getline(command_stream, command, ' ');
+
+    *output << "command: " << command << std::endl;
 
     if (command == "quit") {
       exit(0);
@@ -288,10 +298,10 @@ class EngineComponents {
 int main() {
   EngineComponents* engine = new EngineComponents();
   engine->performHandshake();
-
+  std::ofstream out("log");
+  output = &out;
   while (true) {
     /* Fetch and execute next command */
-
     engine->executeOneCommand();
   }
   return 0;
