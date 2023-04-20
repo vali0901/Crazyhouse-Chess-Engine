@@ -4,15 +4,15 @@
 #include <bits/stdc++.h>
 
 #include "Piece.h"
-
+#include "PlaySide.h"
 #define TABLE_SZ 8
 
 class Table {
  public:
-  Piece getPiece(int x, int y);
-  void setPiece(int x, int y, Piece new_piece);
+  std::pair<Piece, PlaySide> getPiece(int x, int y);
+  void setPiece(int x, int y, Piece new_piece, PlaySide playSide);
  private:
-  std::vector<std::vector<Piece>> table;
+  std::vector<std::vector<std::pair<Piece, PlaySide>>> table;
 };
 
 #endif

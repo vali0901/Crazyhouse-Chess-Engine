@@ -8,10 +8,16 @@
 #include "Move.h"
 #include "Piece.h"
 #include "PlaySide.h"
+#include "Main.h"
 
 static PlaySide sideToMove;
 static PlaySide engineSide;
 std::ofstream *output;
+
+PlaySide getEngineSide() {
+  return engineSide;
+}
+
 static void toggleSideToMove() {
     static const PlaySide switchTable[] = {
         [BLACK] = WHITE,
@@ -296,7 +302,6 @@ int main() {
   output = &out;
   while (true) {
     /* Fetch and execute next command */
-    // *output << "\n";
     engine->executeOneCommand();
   }
   return 0;

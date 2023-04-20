@@ -4,14 +4,14 @@
 
 #include "Move.h"
 #include "PlaySide.h"
-
+#include "Table.h"
 class Bot {
  private:
   static const std::string BOT_NAME;
-
  public:
   /* Declare custom fields below */
-
+  Move* last_move_opposite_player;
+  Table* table;
   /* Declare custom fields above */
   Bot();
 

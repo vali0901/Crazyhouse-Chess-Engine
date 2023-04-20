@@ -4,10 +4,11 @@
 
 #include "Piece.h"
 
-Piece Table::getPiece(int x, int y) {
+std::pair<Piece, PlaySide> Table::getPiece(int x, int y) {
     return table[x][y];
 }
 
-void Table::setPiece(int x, int y, Piece new_piece) {
-    table[x][y] = new_piece;
+void Table::setPiece(int x, int y, Piece new_piece, PlaySide playSide) {
+    table[x][y].first = new_piece;
+    table[x][y].second = playSide;
 }
