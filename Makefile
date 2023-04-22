@@ -22,6 +22,7 @@ DEPS := $(OBJS:.o=.d)
 TEST = Test
 TSRCS = $(shell find $(SRCDIR) -name '*.cpp' ! -iname 'Main*' ! -iname 'Bot*')
 TOBJS := $(TSRCS:$(SRCDIR)/%.cpp=$(BLDDIR)/%.o)
+TDEPS := $(TOBJS:.o=.d)
 
 .PHONY: all clean
 
@@ -42,7 +43,7 @@ $(TEST):$(TOBJS)
 
 
 clean:
-	rm -rf $(OBJS) $(OBJSH) $(DEPS) $(DEPSH)
+	rm -rf $(OBJS) $(OBJSH) $(DEPS) $(DEPSH) $(TOBJS) $(TDEPS)
 	rm -rf $(PRGM) $(TEST)
 
 run: Main
