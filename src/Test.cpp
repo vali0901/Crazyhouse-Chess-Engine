@@ -1,7 +1,8 @@
 #include "Piece.h"
 #include "PieceHandlers.h"
+#include "Table.h"
 
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c\n"
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c %c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
   ((byte) & 0x80 ? '1' : '0'), \
   ((byte) & 0x40 ? '1' : '0'), \
@@ -92,6 +93,74 @@ void testPieceHandler() {
         printf("White test passed\n");
 }
 
+void testTableStatsUpdater() {
+    // test initial chess table
+    //Table *tableobj = new Table();
+
+    // test random layout table
+    //Table *tableobj = new Table(0);
+
+    // test custom layout table
+    Table *tableobj = new Table(0, 0);
+
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            switch (PieceHandlers::getType(tableobj->table[i][j]) | PieceHandlers::getColor(tableobj->table[i][j]))
+            {
+            case PAWN | WHITE:
+                printf("wP\t");
+                break;
+            case KNIGHT | WHITE:
+                printf("wN\t");
+                break;
+            case BISHOP | WHITE:
+                printf("wB\t");
+                break;
+            case KING | WHITE:
+                printf("wK\t");
+                break;
+            case QUEEN | WHITE:
+                printf("wQ\t");
+                break;
+            case ROOK | WHITE:
+                printf("wR\t");
+                break;
+            case PAWN | BLACK:
+                printf("bP\t");
+                break;
+            case KNIGHT | BLACK:
+                printf("bN\t");
+                break;
+            case BISHOP | BLACK:
+                printf("bB\t");
+                break;
+            case KING | BLACK:
+                printf("bK\t");
+                break;
+            case QUEEN | BLACK:
+                printf("bQ\t");
+                break;
+            case ROOK | BLACK:
+                printf("bR\t");
+                break;
+            default:
+                printf("||\t");
+                break;
+            }
+        }
+        printf("\n");
+    }
+
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            printf(BYTE_TO_BINARY_PATTERN "\t", BYTE_TO_BINARY(tableobj->table[i][j]));
+        }
+        printf("\n");
+    }
+
+
+}
 int main() {
-    testPieceHandler();
+    //testPieceHandler();
+    testTableStatsUpdater();
 }

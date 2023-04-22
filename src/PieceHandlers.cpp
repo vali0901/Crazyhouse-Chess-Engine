@@ -18,7 +18,7 @@ uint8_t PieceHandlers::createPiece(Piece type, PlaySide side) {
 Piece PieceHandlers::getType(uint8_t piececode)
 {   
     // i found a smarter way to do this :)
-    return (Piece)(piececode & piece_mask);
+    return (Piece)(piececode & piece_type_mask);
 
     // if ((code & KING) == KING)
     //     return KING;
@@ -51,6 +51,21 @@ PlaySide PieceHandlers::getColor(uint8_t piececode) {
     //     return BLACK;
     
     // return NONE;
+}
+
+void PieceHandlers::setAttackedBy(uint8_t &piececode, PlaySide attacker_color) {
+    switch (attacker_color)
+    {
+    case WHITE:
+        piececode |= ATTACKED_BY_WHITE;
+        break;
+    case BLACK:
+        piececode |= ATTACKED_BY_BLACK;
+        break;
+    default:
+        printf("WTF!!! ATTACKER DOESN'T HAVE A COLOR, THIS SHOULDN'T HAPPEN!!!\n");
+        break;
+    }
 }
 
 std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, uint8_t table[8][8]) {

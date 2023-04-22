@@ -4,7 +4,8 @@
 #include "PlaySide.h"
 #include <bits/stdc++.h>
 
-#define piece_mask 0b01110000
+#define piece_type_mask 0b01110000
+#define piece_state_mask 0b00001111
 
 /*
     Each piece bit layout:
@@ -23,6 +24,13 @@ enum Piece {
     NAP = 0
     };
     
+enum PieceState {
+    NOT_ATTACKED = 0,
+    ATTACKED_BY_WHITE = 0b00001000,
+    ATTACKED_BY_BLACK = 0b00000100,
+    ATTACKER_OF_THE_KING = 0b00000010,
+    PROTECTOR_OF_THE_KING = 0b00000001
+    };
 
 
 #endif

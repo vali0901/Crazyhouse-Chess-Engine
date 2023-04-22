@@ -9,10 +9,17 @@
 
 class Table {
  public:
-  uint8_t getPiece(int x, int y);
-  void setPiece(int x, int y, uint8_t new_piece);
+	Table();
+	// contructor of a table with a random layout
+	Table(int random);
+	Table(int custom, int youchoose);
+  	uint8_t getPiece(int x, int y);
+  	void setPiece(int x, int y, uint8_t new_piece);
+  	void update_states();
+	// temporary public
+	uint8_t table[8][8];
  private:
-  uint8_t table[8][8];
+  	
 };
 
 #endif
