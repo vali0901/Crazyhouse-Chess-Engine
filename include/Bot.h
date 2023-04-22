@@ -5,6 +5,8 @@
 #include "Move.h"
 #include "PlaySide.h"
 #include "Table.h"
+#include "PieceHandlers.h"
+
 class Bot {
  private:
   static const std::string BOT_NAME;
@@ -12,6 +14,7 @@ class Bot {
   /* Declare custom fields below */
   Move* last_move_opposite_player;
   Table* table;
+  // PieceHandlers pieceHandler;
   /* Declare custom fields above */
   Bot();
 

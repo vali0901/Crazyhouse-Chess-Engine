@@ -5,8 +5,9 @@ SRCDIR := ./src
 HDRDIR := ./include
 BLDDIR := ./build
 
+# Main dependencies
 PRGM  = Main
-SRCS := $(shell find $(SRCDIR) -name '*.cpp')
+SRCS := $(shell find $(SRCDIR) -name '*.cpp' ! -iname 'Test*')
 HDRS := $(wildcard $(HDRDIR)/*.h)
 
 OBJSH := $(HDRS:.h=.o)
@@ -17,8 +18,14 @@ OBJS := $(SRCS:$(SRCDIR)/%.cpp=$(BLDDIR)/%.o)
 
 DEPS := $(OBJS:.o=.d)
 
+# Test dependencies
+TEST = Test
+TSRCS = $(shell find $(SRCDIR) -name '*.cpp' ! -iname 'Main*' ! -iname 'Bot*')
+TOBJS := $(TSRCS:$(SRCDIR)/%.cpp=$(BLDDIR)/%.o)
+
 .PHONY: all clean
 
+# Rules for building Main
 build: $(PRGM)
 
 $(PRGM): $(OBJS)
@@ -27,12 +34,21 @@ $(PRGM): $(OBJS)
 $(BLDDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
+# Rules for building Test
+test: $(TEST)
+
+$(TEST):$(TOBJS)
+	$(CXX) $(CXXFLAGS) $(TOBJS) $(LDLIBS) -o $@
+
+
 clean:
 	rm -rf $(OBJS) $(OBJSH) $(DEPS) $(DEPSH)
-	rm -rf $(PRGM)
+	rm -rf $(PRGM) $(TEST)
 
 run: Main
 	./Main
 
 zip:
 	zip -r Etapa3.zip ./src ./build ./include Makefile
+
+

@@ -9,10 +9,10 @@
 
 class Table {
  public:
-  std::pair<Piece, PlaySide> getPiece(int x, int y);
-  void setPiece(int x, int y, Piece new_piece, PlaySide playSide);
+  uint8_t getPiece(int x, int y);
+  void setPiece(int x, int y, uint8_t new_piece);
  private:
-  std::vector<std::vector<std::pair<Piece, PlaySide>>> table;
+  uint8_t table[64];
 };
 
 #endif

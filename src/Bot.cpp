@@ -2,6 +2,8 @@
 #include "Move.h"
 #include "Table.h"
 #include "Main.h"
+#include "Piece.h"
+#include "PieceHandlers.h"
 
 #include <bits/stdc++.h>
 
@@ -33,21 +35,25 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
       y_dst = (int)move->destination.value()[1];
     }
 
-    std::pair<Piece, PlaySide> moved_piece = std::pair(NOPE, NONE);
+    // old declaration:
+    // std::pair<Piece, PlaySide> moved_piece = std::pair(NAP, NONE);
+
+    // new declaration
+    uint8_t moved_piece = PieceHandlers::createPiece(NAP, NONE);
 
     // daca exista sursa, elementul de pe pozitia sursa e sters, si memorat in moved_piece
     if (x_src != -1 && y_src != -1) {
       moved_piece = table->getPiece(x_src, y_src);
-      table->setPiece(x_src, y_src, NOPE, NONE);
+      table->setPiece(x_src, y_src, NAP);
     }
     // daca are destinatie, elementul e pus pe destinatie, daca e un atac ar trebui
     // testat daca e o piesa inamica, in cazul asta o adaug la piesele mele disponibile
     if (x_dst != -1 && y_dst != -1) {
-      table->setPiece(x_dst, y_dst, moved_piece.first, sideToMove);
+      table->setPiece(x_dst, y_dst, moved_piece);
     }
     // in caz de promovare/dropIn, e replaced la destinatie cu piesa replacement
     if (move->getReplacement().has_value()) {
-      table->setPiece(x_dst, y_dst, move->getReplacement().value(), sideToMove);
+      table->setPiece(x_dst, y_dst, PieceHandlers::createPiece(move->getReplacement().value(), sideToMove));
     }
 
 }
