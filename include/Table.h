@@ -12,7 +12,7 @@ class Table {
   uint8_t getPiece(int x, int y);
   void setPiece(int x, int y, uint8_t new_piece);
  private:
-  uint8_t table[64];
+  uint8_t table[8][8];
 };
 
 #endif

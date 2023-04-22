@@ -53,7 +53,7 @@ PlaySide PieceHandlers::getColor(uint8_t piececode) {
     // return NONE;
 }
 
-std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, uint8_t table[64]) {
+std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, uint8_t table[8][8]) {
     // TODO: Depending on piecetype, call a (private) method for generating the possible moves for this piece
     // We can then filter through these possible moves and choose only the legal ones (in case of check or whatever)
     // Another way to do this is by giving some constraints to this method, with which we can tell the situation
