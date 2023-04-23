@@ -196,8 +196,14 @@ std::vector<Move> Table::generateAllPossibleMoves() {
 	/*
 		TODO
 	*/
-	std::vector<Move> tmp;
-	return tmp;
+	std::vector<Move> moves;
+	for(int i = 0; i < 8; i ++)
+		for(int j = 0; j < 8; j++)
+			if(PieceHandlers::getType(table[i][j]) != NAP) {
+				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, *Move::moveTo("", "")); 
+				moves.insert(moves.end(), helper.begin(), helper.end());
+			}
+	return moves;
 }
 
 Table::Table() {
@@ -341,9 +347,9 @@ Table::Table(int custom, int youchoose) {
 	memset(table, 0, 64);
 
 	//table[4][4] = PieceHandlers::createPiece(QUEEN, WHITE);
-	//table[1][4] = PieceHandlers::createPiece(KING, BLACK);
-	//table[2][4] = PieceHandlers::createPiece(KNIGHT, BLACK);
-	//table[3][4] = PieceHandlers::createPiece(PAWN, WHITE);
+	table[1][4] = PieceHandlers::createPiece(KING, BLACK);
+	table[2][4] = PieceHandlers::createPiece(KNIGHT, WHITE);
+	table[2][3] = PieceHandlers::createPiece(PAWN, WHITE);
 
 	//table[5][4] = PieceHandlers::createPiece(BISHOP, WHITE);
 	//table[6][4] = PieceHandlers::createPiece(ROOK, BLACK);
@@ -352,9 +358,9 @@ Table::Table(int custom, int youchoose) {
 	// table[5][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
 	// table[5][7] = PieceHandlers::createPiece(KING, WHITE);
 
-	table[3][5] = PieceHandlers::createPiece(QUEEN, WHITE);
-	table[4][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
-	table[5][7] = PieceHandlers::createPiece(KING, BLACK);
+	// table[3][5] = PieceHandlers::createPiece(QUEEN, WHITE);
+	// table[4][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
+	// table[5][7] = PieceHandlers::createPiece(KING, BLACK);
 
 	update_states();
 }

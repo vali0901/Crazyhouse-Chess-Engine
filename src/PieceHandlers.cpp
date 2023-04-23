@@ -10,11 +10,11 @@ const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::knight_directions =
 const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::rook_directions =
     {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::bishop_directions =
-    {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+    {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::queen_directions =
-    {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+    {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::king_directions =
-    {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+    {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
 
 
@@ -190,6 +190,32 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
         enemy piece, so you also need to check that the slot you are trying
         to go is safe. (see PieceHandlers::slotIsSafe method)
     */
-   std::vector<Move> tmp;
-	return tmp;
+    std::vector<Move> moves;
+    
+    for(auto &[dx, dy] : PieceHandlers::king_directions) {
+        if(x + dx < 0 || x + dx > 7 || y + dy < 0 || y + dy > 7)
+            continue;
+
+        // if the slot is not safe, we cannot move there
+        if(!PieceHandlers::slotIsSafe(table[x + dx][y + dy], PieceHandlers::getColor(piececode)))
+            continue;
+        
+        // if it's an allied piece, we cannot move there
+        if(PieceHandlers::getType(table[x + dx][y + dy]) != NAP &&
+            PieceHandlers::getColor(table[x + dx][y + dy]) == PieceHandlers::getColor(piececode))
+            continue;
+        
+        // if it' enemy's king
+        if(PieceHandlers::getType(table[x + dx][y + dy]) != KING)
+            continue;
+
+        // otherwise, we can move there, hopefully
+        moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+    }
+
+    /*
+        Partially done, need a mechanism for castling
+    */
+
+    return moves;
 }

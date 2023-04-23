@@ -14,6 +14,65 @@
   ((byte) & 0x02 ? '1' : '0'), \
   ((byte) & 0x01 ? '1' : '0') 
 
+void printTable(uint8_t table[8][8]) {
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            switch (PieceHandlers::getType(table[i][j]) | PieceHandlers::getColor(table[i][j]))
+            {
+            case PAWN | WHITE:
+                printf("wP\t");
+                break;
+            case KNIGHT | WHITE:
+                printf("wN\t");
+                break;
+            case BISHOP | WHITE:
+                printf("wB\t");
+                break;
+            case KING | WHITE:
+                printf("wK\t");
+                break;
+            case QUEEN | WHITE:
+                printf("wQ\t");
+                break;
+            case ROOK | WHITE:
+                printf("wR\t");
+                break;
+            case PAWN | BLACK:
+                printf("bP\t");
+                break;
+            case KNIGHT | BLACK:
+                printf("bN\t");
+                break;
+            case BISHOP | BLACK:
+                printf("bB\t");
+                break;
+            case KING | BLACK:
+                printf("bK\t");
+                break;
+            case QUEEN | BLACK:
+                printf("bQ\t");
+                break;
+            case ROOK | BLACK:
+                printf("bR\t");
+                break;
+            default:
+                printf("||\t");
+                break;
+            }
+        }
+        printf("\n");
+    }
+}
+
+void printTableBits(uint8_t table[8][8]) {
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            printf(BYTE_TO_BINARY_PATTERN "\t", BYTE_TO_BINARY(table[i][j]));
+        }
+        printf("\n");
+    }
+}
+
 // Testing getColor and getType functionalities for each piece and color
 void testPieceHandler() {
     uint8_t pawnb = PieceHandlers::createPiece(PAWN, BLACK);
@@ -104,61 +163,9 @@ void testTableStatsUpdater() {
     // test custom layout table
     Table *tableobj = new Table(0, 0);
 
-    for(int i = 0; i < 8; i++) {
-        for(int j = 0; j < 8; j++) {
-            switch (PieceHandlers::getType(tableobj->table[i][j]) | PieceHandlers::getColor(tableobj->table[i][j]))
-            {
-            case PAWN | WHITE:
-                printf("wP\t");
-                break;
-            case KNIGHT | WHITE:
-                printf("wN\t");
-                break;
-            case BISHOP | WHITE:
-                printf("wB\t");
-                break;
-            case KING | WHITE:
-                printf("wK\t");
-                break;
-            case QUEEN | WHITE:
-                printf("wQ\t");
-                break;
-            case ROOK | WHITE:
-                printf("wR\t");
-                break;
-            case PAWN | BLACK:
-                printf("bP\t");
-                break;
-            case KNIGHT | BLACK:
-                printf("bN\t");
-                break;
-            case BISHOP | BLACK:
-                printf("bB\t");
-                break;
-            case KING | BLACK:
-                printf("bK\t");
-                break;
-            case QUEEN | BLACK:
-                printf("bQ\t");
-                break;
-            case ROOK | BLACK:
-                printf("bR\t");
-                break;
-            default:
-                printf("||\t");
-                break;
-            }
-        }
-        printf("\n");
-    }
+    printTable(tableobj->table);
 
-    for(int i = 0; i < 8; i++) {
-        for(int j = 0; j < 8; j++) {
-            printf(BYTE_TO_BINARY_PATTERN "\t", BYTE_TO_BINARY(tableobj->table[i][j]));
-        }
-        printf("\n");
-    }
-
+    printTableBits(tableobj->table);
 
 }
 
@@ -174,9 +181,23 @@ void testMoveConvert() {
     printf("Source %s\nDestination %s\n", move->source_str.value().c_str(), move->destination_str.value().c_str());
 }
 
+void testGenerateMoves() {
+    // test custom layout table
+    Table *tableobj = new Table(0, 0);
+
+    printTable(tableobj->table);
+    printTableBits(tableobj->table);
+
+    std::vector<Move> moves = tableobj->generateAllPossibleMoves();
+
+    for(auto move : moves)
+        printf("Source (%hhd, %hhd)\tDestination (%hhd, %hhd)\n", move.source_idx->first, move.source_idx->second, move.destination_idx->first, move.destination_idx->second);
+
+}
+
 int main() {
     //testPieceHandler();
     //testTableStatsUpdater();
-    testMoveConvert();
-
+    //testMoveConvert();
+    testGenerateMoves();
 }
