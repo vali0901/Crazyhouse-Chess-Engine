@@ -116,9 +116,11 @@ std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, int8_t x, int
         return PieceHandlers::calculateKingMoves(piececode, x, y, table, last_move);
         break;
     default:
+        std::vector<Move> tmp;
+	    return tmp;
         break;
     }
-    
+
 }
 
 /*
@@ -141,6 +143,8 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
         diagonal. Also, check enpassant rule, based on last_move.
         Create a vector with all the moves you found.
     */
+   std::vector<Move> tmp;
+	return tmp;
 }
 
 std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move) {
@@ -155,6 +159,8 @@ std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t 
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
+   std::vector<Move> tmp;
+	return tmp;
 }
 
 std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move) {
@@ -169,6 +175,8 @@ std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x,
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
+   std::vector<Move> tmp;
+	return tmp;
 }
 
 std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move) {
@@ -183,6 +191,8 @@ std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t 
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
+   std::vector<Move> tmp;
+	return tmp;
 }
 
 std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move) {
@@ -197,6 +207,8 @@ std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
+   std::vector<Move> tmp;
+	return tmp;
 }
 
 std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move) {
@@ -214,4 +226,6 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
         enemy piece, so you also need to check that the slot you are trying
         to go is safe.
     */
+   std::vector<Move> tmp;
+	return tmp;
 }

@@ -5,6 +5,8 @@
 
 #include "Piece.h"
 #include "PlaySide.h"
+#include "Move.h"
+
 #define TABLE_SZ 8
 
 class Table {

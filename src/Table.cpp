@@ -196,6 +196,8 @@ std::vector<Move> Table::generateAllPossibleMoves() {
 	/*
 		TODO
 	*/
+	std::vector<Move> tmp;
+	return tmp;
 }
 
 Table::Table() {
