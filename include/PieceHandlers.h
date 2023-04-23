@@ -8,6 +8,11 @@
 
 class PieceHandlers {
     public:
+        static const std::vector<std::pair<int8_t, int8_t>> knight_directions;
+        static const std::vector<std::pair<int8_t, int8_t>> rook_directions;
+        static const std::vector<std::pair<int8_t, int8_t>> bishop_directions;
+        static const std::vector<std::pair<int8_t, int8_t>> queen_directions;
+        static const std::vector<std::pair<int8_t, int8_t>> king_directions;
         static uint8_t createPiece(Piece type, PlaySide side);
         static Piece getType(uint8_t piececode);
         static PlaySide getColor(uint8_t piececode);

@@ -24,7 +24,6 @@ void Table::update_states() {
 	for(int i = 0; i < 8; i++)
 		for(int j = 0; j < 8; j++) {
 			PlaySide piece_color = PieceHandlers::getColor(table[i][j]);
-			std::vector<std::pair<int8_t, int8_t>> directions;
 			int8_t pawn_direction;
 			switch (PieceHandlers::getType(table[i][j]))
 			{
@@ -46,12 +45,9 @@ void Table::update_states() {
 				}
 				break;
 
-			case KNIGHT:
-				// all possible directions a knight can go
-				directions = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
-				
-				// iterate through them and set the attacked slots, also set the attribute Attacker of the king if needed
-				for(auto & [x, y] : directions)
+			case KNIGHT:	
+				// iterate through directions and set the attacked slots, also set the attribute Attacker of the king if needed
+				for(auto & [x, y] : PieceHandlers::knight_directions)
 					if(i + x < 0 || i + x > 7 || j + y < 0 || j + y > 7)
 						continue;
 					else {
@@ -63,10 +59,8 @@ void Table::update_states() {
 				break;
 
 			case ROOK:
-				directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-
 				// iterate through table in each direction, and stop setting attacked pieces when hitting other piece
-				for(auto & [x, y] : directions) {
+				for(auto & [x, y] : PieceHandlers::rook_directions) {
 					int8_t dx = i + x, dy = j + y;
 					while((dx > -1 && dx < 8) && (dy > -1 && dy < 8)) {
 						PieceHandlers::setAttackedBy(table[dx][dy], piece_color);
@@ -105,10 +99,8 @@ void Table::update_states() {
 				break;
 
 			case BISHOP:
-				directions = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
-
 				// iterate through table in each direction, and stop setting attacked pieces when hitting other piece
-				for(auto & [x, y] : directions) {
+				for(auto & [x, y] : PieceHandlers::bishop_directions) {
 					int8_t dx = i + x, dy = j + y;
 					while((dx > -1 && dx < 8) && (dy > -1 && dy < 8)) {
 						PieceHandlers::setAttackedBy(table[dx][dy], piece_color);
@@ -147,10 +139,8 @@ void Table::update_states() {
 				break;
 
 			case QUEEN:
-				directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
-
 				// iterate through table in each direction, and stop setting attacked pieces when hitting other piece
-				for(auto & [x, y] : directions) {
+				for(auto & [x, y] : PieceHandlers::queen_directions) {
 					int8_t dx = i + x, dy = j + y;
 					while((dx > -1 && dx < 8) && (dy > -1 && dy < 8)) {
 						PieceHandlers::setAttackedBy(table[dx][dy], piece_color);
@@ -189,8 +179,7 @@ void Table::update_states() {
 				break;
 
 			case KING:
-				directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
-				for(auto & [x, y] : directions) 
+				for(auto & [x, y] : PieceHandlers::king_directions) 
 					if(i + x < 0 || i + x > 7 || j + y < 0 || j + y > 7)
 						continue;
 					else
@@ -355,9 +344,9 @@ Table::Table(int custom, int youchoose) {
 	// table[5][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
 	// table[5][7] = PieceHandlers::createPiece(KING, WHITE);
 
-	// table[3][5] = PieceHandlers::createPiece(QUEEN, WHITE);
-	// table[4][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
-	// table[5][7] = PieceHandlers::createPiece(KING, BLACK);
+	table[3][5] = PieceHandlers::createPiece(QUEEN, WHITE);
+	table[4][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
+	table[5][7] = PieceHandlers::createPiece(KING, BLACK);
 
 	update_states();
 }

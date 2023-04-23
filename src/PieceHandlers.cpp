@@ -5,6 +5,20 @@
 #include <bits/stdc++.h>
 
 
+const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::knight_directions =
+    {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
+const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::rook_directions =
+    {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::bishop_directions =
+    {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::queen_directions =
+    {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::king_directions =
+    {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+
+
+
+
 uint8_t PieceHandlers::createPiece(Piece type, PlaySide side) {
     uint8_t piececode = 0;
     piececode |= type;
