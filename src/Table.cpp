@@ -192,6 +192,12 @@ void Table::update_states() {
 		}
 }
 
+std::vector<Move> Table::generateAllPossibleMoves() {
+	/*
+		TODO
+	*/
+}
+
 Table::Table() {
 	memset(table, 0, 64);
 

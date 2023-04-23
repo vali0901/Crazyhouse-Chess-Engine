@@ -17,8 +17,14 @@ class PieceHandlers {
         static Piece getType(uint8_t piececode);
         static PlaySide getColor(uint8_t piececode);
         static void setAttackedBy(uint8_t &piececode, PlaySide attacker_color);
-        static std::vector<Move> calculateMoves(uint8_t piececode, uint8_t table[8][8]);
-        // TODO: deciding how to use those additional bits and some functions for manipulating them
+        static std::vector<Move> calculateMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
+    private:
+        static std::vector<Move> calculatePawnMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
+        static std::vector<Move> calculateKnightMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
+        static std::vector<Move> calculateRookMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
+        static std::vector<Move> calculateBishopMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
+        static std::vector<Move> calculateQueenMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
+        static std::vector<Move> calculateKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move);
 
 };
 
