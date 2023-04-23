@@ -53,6 +53,13 @@ void PieceHandlers::setAttackedBy(uint8_t &piececode, PlaySide attacker_color) {
     }
 }
 
+bool PieceHandlers::slotIsSafe(uint8_t slotcode, PlaySide mycolor) {
+    if(mycolor == WHITE)
+        return (slotcode & ATTACKED_BY_BLACK) == 0;
+
+    return (slotcode & ATTACKED_BY_WHITE) == 0;
+}
+
 std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move) {
    switch (PieceHandlers::getType(piececode))
     {
@@ -181,7 +188,7 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
 
         The king might only go on a slot that is not under attack of another
         enemy piece, so you also need to check that the slot you are trying
-        to go is safe.
+        to go is safe. (see PieceHandlers::slotIsSafe method)
     */
    std::vector<Move> tmp;
 	return tmp;
