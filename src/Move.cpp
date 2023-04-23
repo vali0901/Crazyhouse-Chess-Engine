@@ -7,35 +7,63 @@
 Move::Move(std::optional<std::string> _source,
            std::optional<std::string> _destination,
            std::optional<Piece> _replacement)
-    : source(_source), destination(_destination), replacement(_replacement) {}
+    : source_str(_source), destination_str(_destination), replacement(_replacement) {}
 
-std::optional<std::string> Move::getSource() { return source; }
+Move::Move(std::optional<std::pair<int8_t, int8_t>> _source,
+           std::optional<std::pair<int8_t, int8_t>> _destination,
+           std::optional<Piece> _replacement)
+    : source_idx(_source), destination_idx(_destination), replacement(_replacement) {}
 
-std::optional<std::string> Move::getDestination() { return destination; }
+std::optional<std::string> Move::getSource() { return source_str; }
+
+std::optional<std::string> Move::getDestination() { return destination_str; }
 
 std::optional<Piece> Move::getReplacement() { return replacement; }
 
+void Move::convertStrToIdx(Move &move) {
+    move.destination_idx->first = '8' - move.destination_str.value()[1];
+    move.destination_idx->second = move.destination_str.value()[0] - 'a';
+
+    move.source_idx->first = '8' - move.source_str.value()[1];
+    move.source_idx->second = move.source_str.value()[0] - 'a';
+}
+
+void Move::convertIdxToStr(Move &move) {
+    move.destination_str = "";
+    move.destination_str->push_back(move.destination_idx->second + 'a');
+    move.destination_str->push_back('8' - move.destination_idx->first);
+
+    move.source_str = "";
+    move.source_str->push_back(move.source_idx->second + 'a');
+    move.source_str->push_back('8' - move.source_idx->first); 
+}
+
 bool Move::isNormal()
 {
-  return this->source.has_value() && this->destination.has_value() &&
+  return this->source_str.has_value() && this->destination_str.has_value() &&
          !this->replacement.has_value();
 }
 
 bool Move::isPromotion()
 {
-  return this->source.has_value() && this->destination.has_value() &&
+  return this->source_str.has_value() && this->destination_str.has_value() &&
          this->replacement.has_value();
 }
 
 bool Move::isDropIn()
 {
-  return !this->source.has_value() && this->destination.has_value() &&
+  return !this->source_str.has_value() && this->destination_str.has_value() &&
          this->replacement.has_value();
 }
 
 Move *Move::moveTo(std::optional<std::string> source,
                    std::optional<std::string> destination)
 {
+  return new Move(source, destination, {});
+}
+
+Move *Move::moveTo(std::optional<std::pair<int8_t, int8_t>> source,
+                   std::optional<std::pair<int8_t, int8_t>> destination) {
   return new Move(source, destination, {});
 }
 
@@ -52,4 +80,4 @@ Move *Move::dropIn(std::optional<std::string> destination,
   return new Move({}, destination, replacement);
 }
 
-Move *Move::resign() { return new Move({}, {}, {}); }
+Move *Move::resign() { return new Move("", "", {}); }

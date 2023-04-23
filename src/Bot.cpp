@@ -18,21 +18,21 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
     /* You might find it useful to also separately
      * record last move in another custom field */
     if (getEngineSide() != sideToMove) {
-      last_move_opposite_player->source = move->source;
-      last_move_opposite_player->destination = move->destination;
+      last_move_opposite_player->source_str = move->source_str;
+      last_move_opposite_player->destination_str = move->destination_str;
       last_move_opposite_player->replacement = move->replacement;
     }
     int x_src = -1, y_src = -1, x_dst = -1, y_dst = -1;
     // daca are sursa, ii iau coordonatele transformate din e4 in x = 4 y = 4
     //TODO: verificat ca indicii sa inceapa de la 1/0
-    if (move->source.has_value()) {
-      x_src = (int)(move->source.value()[0] - 'a');
-      y_src = (int)move->source.value()[1];
+    if (move->source_str.has_value()) {
+      x_src = (int)(move->source_str.value()[0] - 'a');
+      y_src = (int)move->source_str.value()[1];
     }
 
-    if (move->destination.has_value()) {
-      x_dst = (int)(move->destination.value()[0] - 'a');
-      y_dst = (int)move->destination.value()[1];
+    if (move->destination_str.has_value()) {
+      x_dst = (int)(move->destination_str.value()[0] - 'a');
+      y_dst = (int)move->destination_str.value()[1];
     }
 
     // old declaration:

@@ -7,10 +7,12 @@
 
 class Move {
  public:
-  /* Positions (source, destination) are encoded in coordinate notation
+  /* Positions (source, destination_str) are encoded in coordinate notation
    as strings (i.e. "e1", "f6", "a4" etc.) */
-  std::optional<std::string> source;
-  std::optional<std::string> destination;
+  std::optional<std::string> source_str;
+  std::optional<std::string> destination_str;
+  std::optional<std::pair<int8_t, int8_t>> source_idx;
+  std::optional<std::pair<int8_t, int8_t>> destination_idx;
   std::optional<Piece> replacement;
 
   /*
@@ -45,18 +47,21 @@ class Move {
    * implementation) Positions are encoded as stated at beginning of file
    * Castles are encoded as follows:
    * source: position of king
-   * destination: final position of king (two tiles away)
+   * destination_str: final position of king (two tiles away)
    * @param source initial tile
-   * @param destination destination tile
+   * @param destination_str destination_str tile
    * @return move to be sent to board
    */
   static Move* moveTo(std::optional<std::string> source,
                       std::optional<std::string> destination);
+
+  static Move* moveTo(std::optional<std::pair<int8_t, int8_t>> source,
+                      std::optional<std::pair<int8_t, int8_t>> destination);
   /**
    * Emit a promotion move. Validity is to be checked by engine
    * (i.e. source contains a pawn in second to last row, etc.)
    * @param source initial tile of pawn
-   * @param destination next tile (could be diagonal if also capturing)
+   * @param destination_str next tile (could be diagonal if also capturing)
    * @param replacement piece to promote to (must not be pawn or king)
    * @return move to be sent to board
    */
@@ -67,7 +72,7 @@ class Move {
    * Emit a drop-in (Crazyhouse specific move where player summons
    * a captured piece onto a free tile. Pawns can not be dropped in first and
    * last rows)
-   * @param destination
+   * @param destination_str
    * @param replacement
    * @return
    */
@@ -75,11 +80,20 @@ class Move {
                       std::optional<Piece> replacement);
   static Move* resign();
 
+  static void convertStrToIdx(Move &move);
+  static void convertIdxToStr(Move &move);
+
  private:
   /* Piece to promote a pawn advancing to last row, or
    *  piece to drop-in (from captured assets) */
+  Move(std::optional<std::pair<int8_t, int8_t>> _source,
+       std::optional<std::pair<int8_t, int8_t>> _destination,
+       std::optional<Piece> _replacement);
+  
   Move(std::optional<std::string> _source,
        std::optional<std::string> _destination,
        std::optional<Piece> _replacement);
+
+  
 };
 #endif
