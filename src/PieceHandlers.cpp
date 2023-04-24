@@ -105,13 +105,28 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
     int8_t init_x = x, init_y = y;
     int8_t dx = (x - kx < 0) ? -1 : (x - kx == 0) ? 0 : 1, dy = (y - ky < 0) ? -1 : (y - ky == 0) ? 0 : 1;
 
+    // going away from the king untill we find the attacker
     do {
         x += dx;
         y += dy;
 
-        constraints.push_back(*Move::moveTo(std::pair(init_x, init_y), std::pair(x, y)));
+        constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(x, y)));
 
     } while (PieceHandlers::getType(table[x][y]) == NAP);
+
+    // going towards the king untill it is found
+    dx = -dx;
+    dy = -dy;
+
+    x = init_x + dx;
+    y = init_y + dy;
+
+    while (PieceHandlers::getType(table[x][y]) == NAP) {
+        constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(x, y)));
+
+        x += dx;
+        y += dy;
+    } 
 
     
     return calculateMoves(piececode, x, y, table, last_move, constraints);
