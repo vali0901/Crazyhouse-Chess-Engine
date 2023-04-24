@@ -128,8 +128,7 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
         y += dy;
     } 
 
-    
-    return calculateMoves(piececode, x, y, table, last_move, constraints);
+    return calculateMoves(piececode, init_x, init_y, table, last_move, constraints);
 }
 
 std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move) {
@@ -159,8 +158,8 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
         dx = (attx - kx < 0) ? -1 : (attx - kx == 0) ? 0 : 1;
         dy = (atty - ky < 0) ? -1 : (atty - ky == 0) ? 0 : 1;
 
-        x = kx + dx; 
-        y = ky + dy;
+        x = kx; 
+        y = ky;
         
         do {
             x += dx;
@@ -186,7 +185,8 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
     for(int i = 0; i < 8; i++)
         for(int j = 0; j < 8; j++)
             if(PieceHandlers::getType(table[i][j]) != NAP &&
-                PieceHandlers::getColor(table[i][j]) == PieceHandlers::getColor(kingcode)) {
+                PieceHandlers::getColor(table[i][j]) == PieceHandlers::getColor(kingcode) &&
+				!PieceHandlers::isProtectorOfTheKing(table[i][j], PieceHandlers::getColor(kingcode))) {
                 std::vector<Move> helper = calculateMoves(table[i][j], i, j, table, last_move, table[i][j] == kingcode ? king_constraints : constraints);
                 moves.insert(moves.end(), helper.begin(), helper.end());
             }
@@ -213,8 +213,55 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
         diagonal. Also, check enpassant rule, based on last_move.
         Create a vector with all the moves you found.
     */
-   std::vector<Move> tmp;
-	return tmp;
+
+    std::vector<Move> possible_moves;
+
+    int8_t dx = PieceHandlers::getColor(piececode) == WHITE ? -1 : 1;
+
+    // check simple moves, without capture
+    // if the slot in front of the pown is empty
+    if(PieceHandlers::getType(table[x + dx][y]) == NAP) {
+        // reached the end of the table, promotion
+        if(x + dx == 0 || x + dx == 7) {
+            // add promotion move, but for now do it as it is
+            possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y)));
+        } else {
+            possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y)));
+        }
+
+        // if the pawn hasn't moved yet, it can move two slots (if that slot is empty)
+        if(PieceHandlers::getType(table[x + dx + dx][y]) == NAP &&
+            ((PieceHandlers::getColor(piececode) == BLACK && x == 1) ||
+            	(PieceHandlers::getColor(piececode) == WHITE && x == 6))) {
+                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx + dx, y)));
+            }
+    }
+
+    // capture
+    // capture the enemy to the right or left, if it's there
+    for(auto dy : {1, -1})
+        if((y + dy < 8 && y + dy > -1) &&
+            PieceHandlers::getType(table[x + dx][y + 1]) != NAP &&
+            PieceHandlers::getColor(table[x + dx][y + 1]) != PieceHandlers::getColor(piececode))
+                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + 1)));
+
+    // some check for en-passant 
+    // TODO
+
+    // filter through constraints
+    if(!constraints.has_value())
+        return possible_moves;
+
+    std::vector<Move> moves;
+
+    for(auto cmove : constraints.value())
+        for(auto pmove : possible_moves) 
+            if(pmove.destination_idx.value() == cmove.destination_idx.value()) {
+                moves.push_back(pmove);
+                continue;
+            }
+
+    return moves;
 }
 
 std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
@@ -229,8 +276,34 @@ std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t 
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
-   std::vector<Move> tmp;
-	return tmp;
+   	
+    std::vector<Move> moves;
+
+    for(auto &[dx, dy] : PieceHandlers::knight_directions) {
+		if(x + dx < 0 || x + dx > 7 || y + dy < 0 || y + dy > 7)
+			continue;
+
+		// move to an empty slot or capture an enemy piece(not the king)
+		if(PieceHandlers::getType(table[x + dx][y + dy]) == NAP ||
+			(PieceHandlers::getType(table[x + dx][y + dy]) != NAP &&
+				PieceHandlers::getType(table[x + dx][y + dy]) != KING &&
+				PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode))) {
+			if(!constraints.has_value())
+				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+			else
+				// check if this current move is in contstraints, if it is, it's legal
+				for(auto move : constraints.value()) {
+					//printf("%hhd, %hhd\n", move.destination_idx->first, move.destination_idx->second);
+					if(move.destination_idx.value() == std::pair((int8_t)(x + dx), (int8_t)(y + dy))) {
+                    	moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+						break;
+					}
+				}
+			
+		}
+	}
+    
+	return moves;   
 }
 
 std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
@@ -245,8 +318,42 @@ std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x,
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
-   std::vector<Move> tmp;
-	return tmp;
+
+   	std::vector<Move> moves;
+
+    for(auto &[dx, dy] : PieceHandlers::rook_directions) {
+		int8_t currx = x + dx, curry = y + dy;
+		while(1){
+			if(!(currx > - 1 && currx < 8 && curry > -1 && curry < 8))
+				break;
+			
+			// break if curr_piece is a King or is an allied piece
+			if(PieceHandlers::getType(table[currx][curry]) == KING ||
+				(PieceHandlers::getType(table[currx][curry]) != NAP &&
+				PieceHandlers::getColor(table[currx][curry]) == PieceHandlers::getColor(piececode)))
+				break;
+			
+			// otherwise add the move
+			if(!constraints.has_value())
+				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+			else
+				// check if this current move is in contstraints, if it is, it's legal
+				for(auto move : constraints.value())
+					if(move.destination_idx.value() == std::pair((int8_t)(currx), (int8_t)(curry))) {
+                    	moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+						break;
+					}
+
+			// if the last move was capturing an enemy piece, break
+			if(PieceHandlers::getType(table[currx][curry]) != NAP)
+				break;
+
+			currx += dx;
+			curry += dy;
+		}
+	}
+
+   	return moves;
 }
 
 std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
@@ -261,8 +368,42 @@ std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t 
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
-   std::vector<Move> tmp;
-	return tmp;
+
+   	std::vector<Move> moves;
+
+    for(auto &[dx, dy] : PieceHandlers::bishop_directions) {
+		int8_t currx = x + dx, curry = y + dy;
+		while(1){
+			if(!(currx > - 1 && currx < 8 && curry > -1 && curry < 8))
+				break;
+			
+			// break if curr_piece is a King or is an allied piece
+			if(PieceHandlers::getType(table[currx][curry]) == KING ||
+				(PieceHandlers::getType(table[currx][curry]) != NAP &&
+				PieceHandlers::getColor(table[currx][curry]) == PieceHandlers::getColor(piececode)))
+				break;
+			
+			// otherwise add the move
+			if(!constraints.has_value())
+				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+			else
+				// check if this current move is in contstraints, if it is, it's legal
+				for(auto move : constraints.value())
+					if(move.destination_idx.value() == std::pair((int8_t)(currx), (int8_t)(curry))) {
+                    	moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+						break;
+					}
+			
+			// if the last move was capturing an enemy piece, break
+			if(PieceHandlers::getType(table[currx][curry]) != NAP)
+				break;
+
+			currx += dx;
+			curry += dy;
+		}
+	}
+
+   	return moves;
 }
 
 std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
@@ -277,8 +418,45 @@ std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x
         color than our initial piece (and it is not the king) add it to
         the vector (this means out initial piece can attack an enemy piece)
     */
-   std::vector<Move> tmp;
-	return tmp;
+
+   	// for(auto move : constraints.value())
+	// 				printf("%hhd, %hhd\n", move.destination_idx->first, move.destination_idx->second);
+	// 			printf("\n\n");
+   	std::vector<Move> moves;
+
+    for(auto &[dx, dy] : PieceHandlers::queen_directions) {
+		int8_t currx = x + dx, curry = y + dy;
+		while(1){
+			if(!(currx > - 1 && currx < 8 && curry > -1 && curry < 8))
+				break;
+			
+			// break if curr_piece is a King or is an allied piece
+			if(PieceHandlers::getType(table[currx][curry]) == KING ||
+				(PieceHandlers::getType(table[currx][curry]) != NAP &&
+				PieceHandlers::getColor(table[currx][curry]) == PieceHandlers::getColor(piececode)))
+				break;
+			
+			// otherwise add the move
+			if(!constraints.has_value())
+				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+			else
+				// check if this current move is in contstraints, if it is, it's legal
+				for(auto move : constraints.value())
+					if(move.destination_idx.value() == std::pair((int8_t)(currx), (int8_t)(curry))) {
+						moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+						break;
+					}
+
+			// if the last move was capturing an enemy piece, break
+			if(PieceHandlers::getType(table[currx][curry]) != NAP)
+				break;
+
+			currx += dx;
+			curry += dy;
+		}
+	}
+
+   	return moves;
 }
 
 std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {

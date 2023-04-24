@@ -223,9 +223,7 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[bKx][bKy], bKx, bKy, table, last_move);
 
 				moves.insert(moves.end(), helper.begin(), helper.end());
-			
-			}
-			if(PieceHandlers::getType(table[i][j]) != NAP && PieceHandlers::getColor(table[i][j]) == turn) {
+			} else if(PieceHandlers::getType(table[i][j]) != NAP && PieceHandlers::getColor(table[i][j]) == turn) {
 				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, last_move, {}); 
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			}
@@ -383,14 +381,14 @@ Table::Table(int custom, int youchoose) {
 	memset(table, 0, 64);
 
 	//table[4][4] = PieceHandlers::createPiece(QUEEN, WHITE);
-	table[1][4] = PieceHandlers::createPiece(KING, WHITE);
-	wKx = 1;
-	wKy = 4;
-	//table[2][2] = PieceHandlers::createPiece(KNIGHT, BLACK);
-	//table[5][0] = PieceHandlers::createPiece(QUEEN, BLACK);
+	table[0][7] = PieceHandlers::createPiece(KING, WHITE);
+	wKx = 0;
+	wKy = 7;
+	//table[2][2] = PieceHandlers::createPiece(KNIGHT, WHITE);
+	table[5][0] = PieceHandlers::createPiece(QUEEN, WHITE);
 
-	//table[5][4] = PieceHandlers::createPiece(BISHOP, WHITE);
-	//table[6][4] = PieceHandlers::createPiece(ROOK, BLACK);
+	table[5][5] = PieceHandlers::createPiece(BISHOP, BLACK);
+	table[7][0] = PieceHandlers::createPiece(ROOK, BLACK);
 
 	// table[5][5] = PieceHandlers::createPiece(ROOK, WHITE);
 	// table[5][6] = PieceHandlers::createPiece(KNIGHT, BLACK);
