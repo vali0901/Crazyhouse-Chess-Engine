@@ -218,15 +218,15 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 			if(PieceHandlers::isProtectorOfTheKing(table[i][j], turn)) {
 				std::vector<Move> helper;
 				if(turn == WHITE)
-					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[wKx][wKy], wKx, wKy, table, *Move::moveTo("", ""));
+					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[wKx][wKy], wKx, wKy, table, last_move);
 				else
-					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[bKx][bKy], bKx, bKy, table, *Move::moveTo("", ""));
+					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[bKx][bKy], bKx, bKy, table, last_move);
 
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			
 			}
-			if(PieceHandlers::getType(table[i][j]) != NAP) {
-				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, *Move::moveTo("", ""), {}); 
+			if(PieceHandlers::getType(table[i][j]) != NAP && PieceHandlers::getColor(table[i][j]) == turn) {
+				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, last_move, {}); 
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			}
 		}
@@ -387,7 +387,7 @@ Table::Table(int custom, int youchoose) {
 	wKx = 1;
 	wKy = 4;
 	//table[2][2] = PieceHandlers::createPiece(KNIGHT, BLACK);
-	table[5][0] = PieceHandlers::createPiece(QUEEN, BLACK);
+	//table[5][0] = PieceHandlers::createPiece(QUEEN, BLACK);
 
 	//table[5][4] = PieceHandlers::createPiece(BISHOP, WHITE);
 	//table[6][4] = PieceHandlers::createPiece(ROOK, BLACK);

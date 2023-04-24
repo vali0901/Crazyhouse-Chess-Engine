@@ -91,8 +91,7 @@ std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, int8_t x, int
         return PieceHandlers::calculateKingMoves(piececode, x, y, table, last_move, constraints);
         break;
     default:
-        std::vector<Move> tmp;
-	    return tmp;
+	    return std::vector<Move>();
         break;
     }
 
@@ -103,7 +102,8 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
     
     std::vector<Move> constraints;
     int8_t init_x = x, init_y = y;
-    int8_t dx = (x - kx < 0) ? -1 : (x - kx == 0) ? 0 : 1, dy = (y - ky < 0) ? -1 : (y - ky == 0) ? 0 : 1;
+    int8_t dx = (x - kx < 0) ? -1 : (x - kx == 0) ? 0 : 1;
+    int8_t dy = (y - ky < 0) ? -1 : (y - ky == 0) ? 0 : 1;
 
     // going away from the king untill we find the attacker
     do {
