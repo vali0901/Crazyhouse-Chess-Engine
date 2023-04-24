@@ -132,7 +132,7 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
             }
 
     // generate constraints depending on the attacker type
-    std::vector<Move> constraints;
+    std::vector<Move> constraints, king_constraints;
     int8_t dx, dy, x, y;
 
     switch (PieceHandlers::getType(attackercode))
@@ -156,7 +156,7 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
 
         // constraint for king, he is not allowed to move on the direction of
         // the attack
-        constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(kx - dx, ky - dy)));
+        king_constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(kx - dx, ky - dy)));
 
         break;    
     case KING:
@@ -172,7 +172,7 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
         for(int j = 0; j < 8; j++)
             if(PieceHandlers::getType(table[i][j]) != NAP &&
                 PieceHandlers::getColor(table[i][j]) == PieceHandlers::getColor(kingcode)) {
-                std::vector<Move> helper = calculateMoves(table[i][j], i, j, table, last_move, constraints);
+                std::vector<Move> helper = calculateMoves(table[i][j], i, j, table, last_move, table[i][j] == kingcode ? king_constraints : constraints);
                 moves.insert(moves.end(), helper.begin(), helper.end());
             }
     return moves;
