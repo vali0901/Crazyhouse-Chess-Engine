@@ -4,6 +4,7 @@
 
 #include "Piece.h"
 #include "PieceHandlers.h"
+#include "PlaySide.h"
 
 uint8_t Table::getPiece(int x, int y) {
 	return table[x][y];
@@ -13,6 +14,12 @@ void Table::setPiece(int x, int y, uint8_t piece) {
 	table[x][y] = piece;
 }
 
+bool Table::kingIsInCheck(PlaySide color) {
+	if(color == WHITE)
+		return (table[wKx][wKy] & ATTACKED_BY_BLACK) != 0;
+	
+	return (table[bKx][bKy] & ATTACKED_BY_WHITE) != 0;
+}
 void Table::update_states() {
 	// iterate trough all pieces and mark their states
 	
@@ -192,17 +199,37 @@ void Table::update_states() {
 		}
 }
 
-std::vector<Move> Table::generateAllPossibleMoves() {
+std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move) {
 	/*
 		TODO
 	*/
+	if(kingIsInCheck(turn)) {
+		if(turn == WHITE)
+			return PieceHandlers::calculateKingInCheckMoves(table[wKx][wKy], wKx, wKy, table, last_move);
+		else
+			return PieceHandlers::calculateKingInCheckMoves(table[bKx][bKy], bKx, bKy, table, last_move);
+
+	
+	}
+
 	std::vector<Move> moves;
 	for(int i = 0; i < 8; i ++)
-		for(int j = 0; j < 8; j++)
+		for(int j = 0; j < 8; j++) {
+			if(PieceHandlers::isProtectorOfTheKing(table[i][j], turn)) {
+				std::vector<Move> helper;
+				if(turn == WHITE)
+					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[wKx][wKy], wKx, wKy, table, *Move::moveTo("", ""));
+				else
+					helper = PieceHandlers::calculateProtectorOfTheKingMoves(table[i][j], i, j, table[bKx][bKy], bKx, bKy, table, *Move::moveTo("", ""));
+
+				moves.insert(moves.end(), helper.begin(), helper.end());
+			
+			}
 			if(PieceHandlers::getType(table[i][j]) != NAP) {
-				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, *Move::moveTo("", "")); 
+				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, *Move::moveTo("", ""), {}); 
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			}
+		}
 	return moves;
 }
 
@@ -228,6 +255,11 @@ Table::Table() {
 
 	table[0][4] = PieceHandlers::createPiece(KING, BLACK);
 	table[7][4] = PieceHandlers::createPiece(KING, WHITE);
+
+	bKx = 0;
+	bKy = 4;
+	wKx = 7;
+	wKy = 4;
 
 	update_states();
 }
@@ -331,14 +363,18 @@ Table::Table(int random) {
 		y = std::rand() % 8;
 	} while(table[x][y] != NAP);
 
-	table[x][y] = PieceHandlers::createPiece(KING, WHITE);
+	table[x][y] = PieceHandlers::createPiece(KING, WHITE);\
+	wKx = x;
+	wKy = y;
 
 	do {
 		x = std::rand() % 8;
 		y = std::rand() % 8;
 	} while(table[x][y] != NAP);
 
-	table[x][y] = PieceHandlers::createPiece(KING, BLACK);
+    table[x][y] = PieceHandlers::createPiece(KING, BLACK);
+	bKx = x;
+	bKy = y;
 
 	update_states();
 }
@@ -347,9 +383,11 @@ Table::Table(int custom, int youchoose) {
 	memset(table, 0, 64);
 
 	//table[4][4] = PieceHandlers::createPiece(QUEEN, WHITE);
-	table[1][4] = PieceHandlers::createPiece(KING, BLACK);
-	table[2][4] = PieceHandlers::createPiece(KNIGHT, WHITE);
-	table[2][3] = PieceHandlers::createPiece(PAWN, WHITE);
+	table[1][4] = PieceHandlers::createPiece(KING, WHITE);
+	wKx = 1;
+	wKy = 4;
+	//table[2][2] = PieceHandlers::createPiece(KNIGHT, BLACK);
+	table[5][0] = PieceHandlers::createPiece(QUEEN, BLACK);
 
 	//table[5][4] = PieceHandlers::createPiece(BISHOP, WHITE);
 	//table[6][4] = PieceHandlers::createPiece(ROOK, BLACK);
