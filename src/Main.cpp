@@ -273,7 +273,7 @@ public:
     }
 
     /* Make next move (go is issued when it's the bot's turn) */
-    Move *move = bot.value()->calculateNextMove();
+    Move *move = bot.value()->calculateNextMove(sideToMove);
     emitMove(move);
 
     delete move;
@@ -292,7 +292,7 @@ public:
       bot.value()->recordMove(move, sideToMove);
       toggleSideToMove();
 
-      Move *response = bot.value()->calculateNextMove();
+      Move *response = bot.value()->calculateNextMove(sideToMove);
       emitMove(response);
 
       delete response;

@@ -32,7 +32,7 @@ class Bot {
    *                  move has been recorded in force mode
    * @return your move
    */
-  Move* calculateNextMove();
+  Move* calculateNextMove(PlaySide sideToMove);
 
   static std::string getBotName();
 };

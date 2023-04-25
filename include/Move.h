@@ -68,6 +68,9 @@ class Move {
   static Move* promote(std::optional<std::string> source,
                        std::optional<std::string> destination,
                        std::optional<Piece> replacement);
+     static Move* promote(std::optional<std::pair<int8_t, int8_t>> source,
+                         std::optional<std::pair<int8_t, int8_t>> destination,
+                         std::optional<Piece> replacement);
   /**
    * Emit a drop-in (Crazyhouse specific move where player summons
    * a captured piece onto a free tile. Pawns can not be dropped in first and
