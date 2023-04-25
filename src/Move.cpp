@@ -84,6 +84,13 @@ Move *Move::promote(std::optional<std::string> source,
   return new Move(source, destination, replacement);
 }
 
+Move *Move::promote(std::optional<std::pair<int8_t, int8_t>> source,
+                    std::optional<std::pair<int8_t, int8_t>> destination,
+                    std::optional<Piece> replacement)
+{
+  return new Move(source, destination, replacement);
+}
+
 Move *Move::dropIn(std::optional<std::string> destination,
                    std::optional<Piece> replacement)
 {

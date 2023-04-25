@@ -191,7 +191,7 @@ void testGenerateMoves() {
     std::vector<Move> moves = tableobj->generateAllPossibleMoves(WHITE, *Move::moveTo("", ""));
 
     for(auto move : moves)
-        printf("Source (%hhd, %hhd)\tDestination (%hhd, %hhd)\n", move.source_idx->first, move.source_idx->second, move.destination_idx->first, move.destination_idx->second);
+        printf("Source (%hhd, %hhd)\tDestination (%hhd, %hhd)\t Promotion (%hhu)\n", move.source_idx->first, move.source_idx->second, move.destination_idx->first, move.destination_idx->second, move.replacement.has_value() ? move.replacement.value() : 0b11111111);
 
 }
 

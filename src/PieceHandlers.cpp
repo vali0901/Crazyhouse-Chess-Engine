@@ -224,7 +224,11 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
         // reached the end of the table, promotion
         if(x + dx == 0 || x + dx == 7) {
             // add promotion move, but for now do it as it is
-            possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y)));
+            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), QUEEN));
+            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), ROOK));
+            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), KNIGHT));
+            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), BISHOP));
+
         } else {
             possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y)));
         }

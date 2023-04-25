@@ -113,13 +113,19 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   table.last_move = *move;
 }
 
-Move* Bot::calculateNextMove() {
+Move* Bot::calculateNextMove(PlaySide sideToMove) {
   /* Play move for the side the engine is playing (Hint: Main.getEngineSide())
    * Make sure to record your move in custom structures before returning.
    *
    * Return move that you are willing to submit
    * Move is to be constructed via one of the factory methods declared in Move.h */
-  return Move::resign();
+
+  std::vector<Move> allMoves = table.generateAllPossibleMoves(sideToMove, table.last_move);
+  std::srand(std::time(NULL));
+  int index = std::rand() % allMoves.size();
+  Move::convertIdxToStr(allMoves[index]);
+
+  return &allMoves[index];
 }
 
 std::string Bot::getBotName() { return Bot::BOT_NAME; }
