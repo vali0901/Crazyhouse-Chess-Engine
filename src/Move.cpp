@@ -3,6 +3,9 @@
 #include <bits/stdc++.h>
 
 #include "Piece.h"
+Move::Move() {
+  
+}
 
 Move::Move(std::optional<std::string> _source,
            std::optional<std::string> _destination,
@@ -21,21 +24,28 @@ std::optional<std::string> Move::getDestination() { return destination_str; }
 std::optional<Piece> Move::getReplacement() { return replacement; }
 
 void Move::convertStrToIdx(Move &move) {
-    move.destination_idx->first = '8' - move.destination_str.value()[1];
-    move.destination_idx->second = move.destination_str.value()[0] - 'a';
+  if (move.destination_str.has_value())
+    move.destination_idx = {'8' - move.destination_str.value()[1], move.destination_str.value()[0] - 'a'};
 
-    move.source_idx->first = '8' - move.source_str.value()[1];
-    move.source_idx->second = move.source_str.value()[0] - 'a';
+  if (move.source_str.has_value())
+    move.source_idx = std::pair('8' - move.source_str.value()[1], move.source_str.value()[0] - 'a');
 }
 
 void Move::convertIdxToStr(Move &move) {
+  if (move.destination_idx.has_value())
+  {
     move.destination_str = "";
     move.destination_str->push_back(move.destination_idx->second + 'a');
     move.destination_str->push_back('8' - move.destination_idx->first);
+  }
 
+  if (move.source_idx.has_value())
+  {
     move.source_str = "";
     move.source_str->push_back(move.source_idx->second + 'a');
     move.source_str->push_back('8' - move.source_idx->first); 
+  }
+    
 }
 
 bool Move::isNormal()

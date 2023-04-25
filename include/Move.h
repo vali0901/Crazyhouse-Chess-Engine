@@ -82,7 +82,7 @@ class Move {
 
   static void convertStrToIdx(Move &move);
   static void convertIdxToStr(Move &move);
-
+  Move();
  private:
   /* Piece to promote a pawn advancing to last row, or
    *  piece to drop-in (from captured assets) */

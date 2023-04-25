@@ -17,11 +17,14 @@ class Table {
 	Table(int custom, int youchoose);
   	uint8_t getPiece(int x, int y);
   	void setPiece(int x, int y, uint8_t new_piece);
+	uint8_t getPiece(std::pair<int, int>);
+	void setPiece(std::pair<int, int> coords, uint8_t piece);
 	bool kingIsInCheck(PlaySide color);
   	void update_states();
 	std::vector<Move> generateAllPossibleMoves(PlaySide turn, Move last_move);
 	// temporary public
 	uint8_t table[8][8];
+	Move last_move;
 	uint8_t wKing, bKing;
 	int8_t wKx, wKy, bKx, bKy;
  private:

@@ -10,8 +10,16 @@ uint8_t Table::getPiece(int x, int y) {
 	return table[x][y];
 }
 
+uint8_t Table::getPiece(std::pair<int, int> coords) {
+	return table[coords.first][coords.second];
+}
+
 void Table::setPiece(int x, int y, uint8_t piece) {
 	table[x][y] = piece;
+}
+
+void Table::setPiece(std::pair<int, int> coords, uint8_t piece) {
+	table[coords.first][coords.second] = piece;
 }
 
 bool Table::kingIsInCheck(PlaySide color) {

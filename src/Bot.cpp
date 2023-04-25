@@ -7,55 +7,110 @@
 
 #include <bits/stdc++.h>
 
+#include <iostream>
+
 const std::string Bot::BOT_NAME = "enpassant"; /* Edit this, escaped characters are forbidden */
 
 Bot::Bot() { /* Initialize custom fields here */
-  last_move_opposite_player = Move::resign();
-  table = new Table();
 }
 
 void Bot::recordMove(Move* move, PlaySide sideToMove) {
-    /* You might find it useful to also separately
-     * record last move in another custom field */
-    if (getEngineSide() != sideToMove) {
-      last_move_opposite_player->source_str = move->source_str;
-      last_move_opposite_player->destination_str = move->destination_str;
-      last_move_opposite_player->replacement = move->replacement;
-    }
-    int x_src = -1, y_src = -1, x_dst = -1, y_dst = -1;
-    // daca are sursa, ii iau coordonatele transformate din e4 in x = 4 y = 4
-    //TODO: verificat ca indicii sa inceapa de la 1/0
-    if (move->source_str.has_value()) {
-      x_src = (int)(move->source_str.value()[0] - 'a');
-      y_src = (int)move->source_str.value()[1];
-    }
+   Move::convertStrToIdx(*move);
 
-    if (move->destination_str.has_value()) {
-      x_dst = (int)(move->destination_str.value()[0] - 'a');
-      y_dst = (int)move->destination_str.value()[1];
-    }
+  // check if castle: the only way a king can move 2 squares is by castling
+  if (move->source_idx.has_value() && move->destination_idx.has_value() && 
+      PieceHandlers::getType(table.getPiece((move->source_idx.value()))) == KING &&
+      abs(move->source_idx.value().second - move->destination_idx.value().second) == 2)
+  {
+    int kx_src = move->source_idx.value().first;
 
-    // old declaration:
-    // std::pair<Piece, PlaySide> moved_piece = std::pair(NAP, NONE);
+    int ky_src = move->source_idx.value().second;
+    int ky_dst = move->destination_idx.value().second;
+    
+    uint8_t moved_rook;
+    if (ky_dst > ky_src) // the right rook should be moved
+    {
+      moved_rook = table.getPiece(kx_src, 7);
+      table.setPiece(kx_src, 7, PieceHandlers::createPiece(NAP, NONE));
+      table.setPiece(kx_src, ky_src + 1, moved_rook);
 
-    // new declaration
-    uint8_t moved_piece = PieceHandlers::createPiece(NAP, NONE);
+    } else { // the left rook is moved
+      moved_rook = table.getPiece(kx_src, 0);
+      table.setPiece(kx_src, 0, PieceHandlers::createPiece(NAP, NONE));
+      table.setPiece(kx_src, ky_src - 1, moved_rook);
+    }
+  }
+  
 
-    // daca exista sursa, elementul de pe pozitia sursa e sters, si memorat in moved_piece
-    if (x_src != -1 && y_src != -1) {
-      moved_piece = table->getPiece(x_src, y_src);
-      table->setPiece(x_src, y_src, NAP);
-    }
-    // daca are destinatie, elementul e pus pe destinatie, daca e un atac ar trebui
-    // testat daca e o piesa inamica, in cazul asta o adaug la piesele mele disponibile
-    if (x_dst != -1 && y_dst != -1) {
-      table->setPiece(x_dst, y_dst, moved_piece);
-    }
-    // in caz de promovare/dropIn, e replaced la destinatie cu piesa replacement
-    if (move->getReplacement().has_value()) {
-      table->setPiece(x_dst, y_dst, PieceHandlers::createPiece(move->getReplacement().value(), sideToMove));
-    }
+  // checks if the last move forwarded the piece 2 positions on the same column, if that piece is a pawn
+  // and if the current move is a normal move(has src + dst) and it moves a pawn as well
+  if (table.last_move.destination_idx.has_value() &&
+      table.last_move.source_idx.has_value() &&
+      abs(table.last_move.destination_idx.value().first - table.last_move.source_idx.value().first) == 2 &&
+      PieceHandlers::getType(table.getPiece(table.last_move.destination_idx.value())) == PAWN &&
+      move->source_idx.has_value() &&
+      move->destination_idx.has_value() &&
+      PieceHandlers::getType(table.getPiece(move->source_idx.value())) == PAWN)
+  {
+    
+    int x_src = move->source_idx.value().first;
+    int y_src = move->source_idx.value().second;
 
+    int x_dst = move->destination_idx.value().first;
+    int y_dst = move->destination_idx.value().second;
+
+    int x_last = table.last_move.destination_idx.value().first;
+    int y_last = table.last_move.destination_idx.value().second;
+
+    // if before the move is made, the two pawns are not on the same line, at the distance
+    // of 1 column apart, there's no way it's an en-passant
+    if (x_src == x_last && abs(y_src - y_last) == 1)
+    {
+      // offset = the row behind last_move piece, despite it's colour
+      int offset = 0;
+      
+      if (sideToMove == BLACK)
+        offset = +1;
+      else
+        offset = -1;
+
+      if (x_dst == x_last + offset && PieceHandlers::getType(table.getPiece(x_dst, y_dst)) == NAP)
+      {
+        // TODO:
+        // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+        table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
+      }
+    }
+  }
+
+  uint8_t moved_piece = PieceHandlers::createPiece(NAP, NONE);
+
+  // if move source exists(normal/promotion), the piece is removed and saved in moved_piece
+  if (move->source_idx.has_value())
+  {
+    moved_piece = table.getPiece(move->source_idx.value());
+    table.setPiece(move->source_idx.value(), PieceHandlers::createPiece(NAP, NONE));
+  }
+
+  if (move->destination_idx.has_value())
+  {
+    // check if it captured something
+    if (table.getPiece(move->destination_idx.value()) != NAP)
+    {
+      // TODO:
+      // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+    }
+    table.setPiece(move->destination_idx.value(), moved_piece);
+  }
+
+  // in case of promotion/dropIn, the destination is replaced with "replacement"
+  if (move->getReplacement().has_value())
+  {
+    table.setPiece(move->destination_idx.value(), PieceHandlers::createPiece(move->getReplacement().value(), sideToMove));
+  }
+  table.update_states();
+
+  table.last_move = *move;
 }
 
 Move* Bot::calculateNextMove() {

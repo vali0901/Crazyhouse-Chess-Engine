@@ -12,8 +12,7 @@ class Bot {
   static const std::string BOT_NAME;
  public:
   /* Declare custom fields below */
-  Move* last_move_opposite_player;
-  Table* table;
+  Table table;
   // PieceHandlers pieceHandler;
   /* Declare custom fields above */
   Bot();
