@@ -28,6 +28,11 @@ bool Table::kingIsInCheck(PlaySide color) {
 	
 	return (table[bKx][bKy] & ATTACKED_BY_WHITE) != 0;
 }
+
+void Table::pieceHasMoved(uint8_t mask) {
+	rocinfo &= mask;
+}
+
 void Table::update_states() {
 	// iterate trough all pieces and mark their states
 	
@@ -216,8 +221,6 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 			return PieceHandlers::calculateKingInCheckMoves(table[wKx][wKy], wKx, wKy, table, last_move);
 		else
 			return PieceHandlers::calculateKingInCheckMoves(table[bKx][bKy], bKx, bKy, table, last_move);
-
-	
 	}
 
 	std::vector<Move> moves;
@@ -232,7 +235,7 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			} else if(PieceHandlers::getType(table[i][j]) != NAP && PieceHandlers::getColor(table[i][j]) == turn) {
-				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, last_move, {}); 
+				std::vector<Move> helper = PieceHandlers::calculateMoves(table[i][j], i, j, table, last_move, rocinfo, {}); 
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			}
 		}
@@ -241,6 +244,8 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 
 Table::Table() {
 	memset(table, 0, 64);
+
+	rocinfo = 0b01110111;
 
 	for(int j = 0; j < 8; j++) {
 		table[1][j] = PieceHandlers::createPiece(PAWN, BLACK);
@@ -389,14 +394,21 @@ Table::Table(int custom, int youchoose) {
 	memset(table, 0, 64);
 
 	//table[4][4] = PieceHandlers::createPiece(QUEEN, WHITE);
-	table[0][7] = PieceHandlers::createPiece(KING, WHITE);
-	wKx = 0;
-	wKy = 7;
+	table[1][4] = PieceHandlers::createPiece(KING, WHITE);
+	wKx = 1;
+	wKy = 4;
+	table[3][5] = PieceHandlers::createPiece(KNIGHT, BLACK);
+	table[0][2] = PieceHandlers::createPiece(BISHOP, WHITE);
+	// table[7][0] = PieceHandlers::createPiece(ROOK, WHITE);
+	// table[7][7] = PieceHandlers::createPiece(ROOK, WHITE);
+	//rocinfo = 0b01110000;
 	//table[2][2] = PieceHandlers::createPiece(KNIGHT, WHITE);
-	table[5][0] = PieceHandlers::createPiece(QUEEN, WHITE);
+	//table[5][0] = PieceHandlers::createPiece(QUEEN, WHITE);
+	//table[3][3] = PieceHandlers::createPiece(PAWN, BLACK);
+	//table[3][4] = PieceHandlers::createPiece(PAWN, WHITE);
 
-	table[5][5] = PieceHandlers::createPiece(BISHOP, BLACK);
-	table[7][0] = PieceHandlers::createPiece(ROOK, BLACK);
+	//table[5][5] = PieceHandlers::createPiece(BISHOP, BLACK);
+	//table[7][0] = PieceHandlers::createPiece(ROOK, BLACK);
 
 	// table[5][5] = PieceHandlers::createPiece(ROOK, WHITE);
 	// table[5][6] = PieceHandlers::createPiece(KNIGHT, BLACK);

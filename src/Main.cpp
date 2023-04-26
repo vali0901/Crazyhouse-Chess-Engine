@@ -273,30 +273,31 @@ public:
     }
 
     /* Make next move (go is issued when it's the bot's turn) */
-    Move *move = bot.value()->calculateNextMove(sideToMove);
-    emitMove(move);
+    Move move = bot.value()->calculateNextMove(sideToMove);
+    emitMove(&move);
 
-    delete move;
+    //delete move;
     toggleSideToMove();
   }
 
   void processIncomingMove(Move *move)
   {
-    if (state.value() == FORCE_MODE || state.value() == RECV_NEW)
+    if (state.value() == FORCE_MODE)
     {
       bot.value()->recordMove(move, sideToMove);
       toggleSideToMove();
     }
-    else if (state.value() == PLAYING)
+    else if (state.value() == PLAYING || state.value() == RECV_NEW)
     {
       bot.value()->recordMove(move, sideToMove);
       toggleSideToMove();
 
-      Move *response = bot.value()->calculateNextMove(sideToMove);
-      emitMove(response);
-
-      delete response;
+      Move response = bot.value()->calculateNextMove(sideToMove);
+      emitMove(&response);
+      
       toggleSideToMove();
+      if(state.value() == RECV_NEW)
+        state = PLAYING;
     }
     else
     {

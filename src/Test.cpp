@@ -188,8 +188,13 @@ void testGenerateMoves() {
     printTable(tableobj->table);
     printTableBits(tableobj->table);
 
-    std::vector<Move> moves = tableobj->generateAllPossibleMoves(WHITE, *Move::moveTo("", ""));
+    Move *move = Move::moveTo("d7", "d5");
+    Move::convertStrToIdx(*move);
+    std::vector<Move> moves = tableobj->generateAllPossibleMoves(WHITE, *move);
 
+    Move::convertIdxToStr(moves[0]);
+
+    std::cout << moves[0].source_str.value() << " " << moves[0].destination_str.value() << "\n";
     for(auto move : moves)
         printf("Source (%hhd, %hhd)\tDestination (%hhd, %hhd)\t Promotion (%hhu)\n", move.source_idx->first, move.source_idx->second, move.destination_idx->first, move.destination_idx->second, move.replacement.has_value() ? move.replacement.value() : 0b11111111);
 
