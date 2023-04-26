@@ -3,6 +3,7 @@
 #include "Move.h"
 
 #include <bits/stdc++.h>
+extern std::ofstream *output;
 
 
 const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::knight_directions =
@@ -223,6 +224,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
 
     // check simple moves, without capture
     // if the slot in front of the pown is empty
+
     if(PieceHandlers::getType(table[x + dx][y]) == NAP) {
         // reached the end of the table, promotion
         if(x + dx == 0 || x + dx == 7) {
@@ -260,7 +262,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
                 abs(last_move.destination_idx->first - last_move.source_idx->first) == 2)
                 possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));       
     }
-    
+
     // filter through constraints
     if(!constraints.has_value())
         return possible_moves;

@@ -91,12 +91,35 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
    * Move is to be constructed via one of the factory methods declared in Move.h */
 
   std::vector<Move> allMoves = table.generateAllPossibleMoves(sideToMove, table.last_move);
-  std::srand(std::time(NULL));
-  int index = std::rand() % allMoves.size();
-  Move::convertIdxToStr(allMoves[index]);
-  recordMove(&allMoves[index], sideToMove);
 
-  return allMoves[index];
+  int idx = -1;
+  for (unsigned i = 0; i < allMoves.size(); i++)
+  {
+    
+    if (allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && 
+      PieceHandlers::getType(table.getPiece((allMoves[i].source_idx.value()))) == KING &&
+      abs(allMoves[i].source_idx.value().second - allMoves[i].destination_idx.value().second) == 2)
+      {
+        idx = i;
+        break;
+      }
+  }
+  if (idx == -1) {
+    std::srand(std::time(NULL));
+    int index = std::rand() % allMoves.size();
+    Move::convertIdxToStr(allMoves[index]);
+    recordMove(&allMoves[index], sideToMove);
+
+    return allMoves[index];  
+  } else {
+    *output << (int)allMoves[idx].source_idx.value().first << ' ' << (int)allMoves[idx].source_idx.value().second<<'\n';
+    *output << (int)allMoves[idx].destination_idx.value().first << ' ' << (int)allMoves[idx].destination_idx.value().second<<'\n'; 
+    *output << "idx = " << idx << '\n';
+    Move::convertIdxToStr(allMoves[idx]);
+    recordMove(&allMoves[idx], sideToMove);
+    return allMoves[idx];
+  }
+  
 }
 
 std::string Bot::getBotName() { return Bot::BOT_NAME; }
@@ -162,6 +185,7 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove)
     
     uint8_t moved_rook;
     table.pieceHasMoved(sideToMove == WHITE ? 0b00001111 : 0b11110000);
+
     if (ky_dst > ky_src) // the right rook should be moved
     {
       moved_rook = table.getPiece(kx_src, 7);
