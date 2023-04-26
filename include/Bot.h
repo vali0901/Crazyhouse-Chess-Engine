@@ -38,5 +38,5 @@ class Bot {
 };
 
 bool checkCastling(Table &table, Move *move, PlaySide &sideToMove);
-bool checkEnPassant(Table table, Move *move, PlaySide sideToMove);
+bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove);
 #endif

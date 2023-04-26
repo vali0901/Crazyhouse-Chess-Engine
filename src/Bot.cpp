@@ -11,6 +11,10 @@
 
 extern std::ofstream *output;
 const std::string Bot::BOT_NAME = "enpassant"; /* Edit this, escaped characters are forbidden */
+void printTable(uint8_t table[8][8]);
+void printTableBits(uint8_t table[8][8]);
+
+extern FILE* f_out;
 
 Bot::Bot() { /* Initialize custom fields here */
 }
@@ -38,15 +42,7 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
         table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
     }
 
-  if (checkCastling(table, move, sideToMove))
-  {
-    table.update_states();
-
-    table.last_move = *move;
-    *output << (unsigned int)table.rocinfo << "\n";
-    return;
-  }
-  
+  checkCastling(table, move, sideToMove);
   
   checkEnPassant(table, move, sideToMove);
 
@@ -73,14 +69,18 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
 
   // in case of promotion/dropIn, the destination is replaced with "replacement"
   if (move->getReplacement().has_value())
-  {
     table.setPiece(move->destination_idx.value(), PieceHandlers::createPiece(move->getReplacement().value(), sideToMove));
-  } 
     
   table.update_states();
 
   table.last_move = *move;
   *output << (unsigned int)table.rocinfo << "\n";
+  printTable(table.table);
+  fprintf(f_out, "\n\n");
+
+  printTableBits(table.table);
+  fprintf(f_out, "\n\n");
+
 }
 
 Move Bot::calculateNextMove(PlaySide sideToMove) {
@@ -101,7 +101,7 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
 
 std::string Bot::getBotName() { return Bot::BOT_NAME; }
 
-bool checkEnPassant(Table table, Move *move, PlaySide sideToMove)
+bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove)
 {
   // checks if the last move forwarded the piece 2 positions on the same column, if that piece is a pawn
   // and if the current move is a normal move(has src + dst) and it moves a pawn as well
@@ -139,6 +139,7 @@ bool checkEnPassant(Table table, Move *move, PlaySide sideToMove)
       {
         // TODO:
         // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+        fprintf(f_out,"en passant\n");
         table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
         return true;
       }
@@ -175,4 +176,73 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove)
     return true;
   }
   return false;
+}
+
+void printTable(uint8_t table[8][8]) {
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            switch (PieceHandlers::getType(table[i][j]) | PieceHandlers::getColor(table[i][j]))
+            {
+            case PAWN | WHITE:
+                fprintf(f_out, "wP\t");
+                break;
+            case KNIGHT | WHITE:
+                fprintf(f_out, "wN\t");
+                break;
+            case BISHOP | WHITE:
+                fprintf(f_out, "wB\t");
+                break;
+            case KING | WHITE:
+                fprintf(f_out, "wK\t");
+                break;
+            case QUEEN | WHITE:
+                fprintf(f_out, "wQ\t");
+                break;
+            case ROOK | WHITE:
+                fprintf(f_out,"wR\t");
+                break;
+            case PAWN | BLACK:
+                fprintf(f_out,"bP\t");
+                break;
+            case KNIGHT | BLACK:
+                fprintf(f_out,"bN\t");
+                break;
+            case BISHOP | BLACK:
+                fprintf(f_out,"bB\t");
+                break;
+            case KING | BLACK:
+                fprintf(f_out, "bK\t");
+                break;
+            case QUEEN | BLACK:
+                fprintf(f_out, "bQ\t");
+                break;
+            case ROOK | BLACK:
+                fprintf(f_out,"bR\t");
+                break;
+            default:
+                fprintf(f_out, "||\t");
+                break;
+            }
+        }
+        fprintf(f_out, "\n");
+    }
+}
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c %c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  ((byte) & 0x80 ? '1' : '0'), \
+  ((byte) & 0x40 ? '1' : '0'), \
+  ((byte) & 0x20 ? '1' : '0'), \
+  ((byte) & 0x10 ? '1' : '0'), \
+  ((byte) & 0x08 ? '1' : '0'), \
+  ((byte) & 0x04 ? '1' : '0'), \
+  ((byte) & 0x02 ? '1' : '0'), \
+  ((byte) & 0x01 ? '1' : '0') 
+
+void printTableBits(uint8_t table[8][8]) {
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            fprintf(f_out, BYTE_TO_BINARY_PATTERN "\t", BYTE_TO_BINARY(table[i][j]));
+        }
+        fprintf(f_out,"\n");
+    }
 }
