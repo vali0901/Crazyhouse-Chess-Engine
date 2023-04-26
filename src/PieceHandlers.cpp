@@ -68,8 +68,11 @@ bool PieceHandlers::isAttackerOfTheKing(uint8_t piececode, PlaySide attacked_col
     return (piececode & ATTACKER_OF_THE_KING) != 0 && PieceHandlers::getColor(piececode) != attacked_color;
 }
 
+bool PieceHandlers::pieceHasMoved(uint8_t rocinfo, uint8_t mask) {
+	return (rocinfo & mask) == 0;
+}
 
-std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
+std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, uint8_t rocinfo, std::optional<std::vector<Move>> constraints) {
    switch (PieceHandlers::getType(piececode))
     {
     case PAWN:
@@ -88,7 +91,7 @@ std::vector<Move> PieceHandlers::calculateMoves(uint8_t piececode, int8_t x, int
         return PieceHandlers::calculateQueenMoves(piececode, x, y, table, last_move, constraints);
         break;
     case KING:
-        return PieceHandlers::calculateKingMoves(piececode, x, y, table, last_move, constraints);
+        return PieceHandlers::calculateKingMoves(piececode, x, y, table, last_move, rocinfo, constraints);
         break;
     default:
 	    return std::vector<Move>();
@@ -128,7 +131,7 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
         y += dy;
     } 
 
-    return calculateMoves(piececode, init_x, init_y, table, last_move, constraints);
+    return calculateMoves(piececode, init_x, init_y, table, last_move, 0, constraints);
 }
 
 std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move) {
@@ -187,7 +190,7 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
             if(PieceHandlers::getType(table[i][j]) != NAP &&
                 PieceHandlers::getColor(table[i][j]) == PieceHandlers::getColor(kingcode) &&
 				!PieceHandlers::isProtectorOfTheKing(table[i][j], PieceHandlers::getColor(kingcode))) {
-                std::vector<Move> helper = calculateMoves(table[i][j], i, j, table, last_move, table[i][j] == kingcode ? king_constraints : constraints);
+                std::vector<Move> helper = calculateMoves(table[i][j], i, j, table, last_move, 0, table[i][j] == kingcode ? king_constraints : constraints);
                 moves.insert(moves.end(), helper.begin(), helper.end());
             }
     return moves;
@@ -243,15 +246,21 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
 
     // capture
     // capture the enemy to the right or left, if it's there
-    for(auto dy : {1, -1})
-        if((y + dy < 8 && y + dy > -1) &&
-            PieceHandlers::getType(table[x + dx][y + 1]) != NAP &&
-            PieceHandlers::getColor(table[x + dx][y + 1]) != PieceHandlers::getColor(piececode))
-                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + 1)));
+    for(auto dy : {1, -1}) {
+        if(y + dy > 7 && y + dy < 0)
+            continue;
+        if(PieceHandlers::getType(table[x + dx][y + dy]) != NAP &&
+            PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode))
+                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
 
-    // some check for en-passant 
-    // TODO
-
+        // if there is a pawn to my right or to my left, maybe we can do en-passant
+        if(PieceHandlers::getType(table[x][y + dy]) == PAWN) //|| PieceHandlers::getType(table[x][y - 1]) == PAWN)
+            // check if it is available for en-passant
+            if(last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
+                abs(last_move.destination_idx->first - last_move.source_idx->first) == 2)
+                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));       
+    }
+    
     // filter through constraints
     if(!constraints.has_value())
         return possible_moves;
@@ -463,7 +472,7 @@ std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x
    	return moves;
 }
 
-std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
+std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, uint8_t rocinfo, std::optional<std::vector<Move>> constraints) {
     /*
         TODO:
         Generate all the possible moves of this piece, go through
@@ -515,6 +524,43 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
     /*
         Partially done, need a mechanism for castling
     */
+    uint8_t rocinfomask = (PieceHandlers::getColor(piececode) == WHITE) ? 0b01110000 : 0b00000111;
+
+    // if any piece has moved or the king is in check, no castling
+    if((rocinfo & rocinfomask) == 0 ||
+        !PieceHandlers::slotIsSafe(piececode, PieceHandlers::getColor(piececode))) {
+        return moves;
+        }
+
+    // if the king has moved, no castling
+    if(PieceHandlers::pieceHasMoved(rocinfo, (PieceHandlers::getColor(piececode) == WHITE) ? 0b00100000 : 0b00000010)) {
+        return moves;
+    }
+    
+    // check rocades separately
+    // rocade right
+    if(!PieceHandlers::pieceHasMoved(rocinfo, (PieceHandlers::getColor(piececode) == WHITE) ? 0b00010000 : 0b00000001)) {
+        bool rocade_right = true;
+        for(int8_t j = y + 1; j < 7; j++)
+            if(PieceHandlers::getType(table[x][j]) != NAP ||
+                !PieceHandlers::slotIsSafe(table[x][j], PieceHandlers::getColor(piececode)))
+                rocade_right = false;
+
+        if(rocade_right)
+            moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x, y + 2)));        
+    }
+
+    // rocade right
+    if(!PieceHandlers::pieceHasMoved(rocinfo, (PieceHandlers::getColor(piececode) == WHITE) ? 0b01000000 : 0b00000100)) {
+        bool rocade_left = true;
+        for(int8_t j = 1; j < y; j++)
+            if(PieceHandlers::getType(table[x][j]) != NAP ||
+                !PieceHandlers::slotIsSafe(table[x][j], PieceHandlers::getColor(piececode)))
+                rocade_left = false;
+
+        if(rocade_left)
+            moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x, y - 2)));        
+    }
 
     return moves;
 }

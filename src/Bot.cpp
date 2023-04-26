@@ -9,6 +9,7 @@
 
 #include <iostream>
 
+extern std::ofstream *output;
 const std::string Bot::BOT_NAME = "enpassant"; /* Edit this, escaped characters are forbidden */
 
 Bot::Bot() { /* Initialize custom fields here */
@@ -16,6 +17,27 @@ Bot::Bot() { /* Initialize custom fields here */
 
 void Bot::recordMove(Move* move, PlaySide sideToMove) {
    Move::convertStrToIdx(*move);
+
+  // mark the relevant moved pieces as moved (might crash (100 %) for drop-in moves)
+    if(PieceHandlers::getType(table.getPiece(move->source_idx.value())) == KING) {
+      if(PieceHandlers::getColor(table.getPiece(move->source_idx.value())) == WHITE) {
+        table.wKx = move->destination_idx->first;
+        table.wKy = move->destination_idx->second;
+        table.pieceHasMoved(0b11011111);
+      } else {
+        table.bKx = move->destination_idx->first;
+        table.bKy = move->destination_idx->second;
+        table.pieceHasMoved(0b11111101);
+      }
+    } else if (PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
+      // left rook has moved
+      if(move->destination_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->destination_idx.value() == std::pair((int8_t)7, (int8_t)0))
+        table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
+      // right rook has moved
+      if(move->destination_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->destination_idx.value() == std::pair((int8_t)7, (int8_t)7))
+        table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
+    }
+
 
   // check if castle: the only way a king can move 2 squares is by castling
   if (move->source_idx.has_value() && move->destination_idx.has_value() && 
@@ -33,11 +55,12 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
       moved_rook = table.getPiece(kx_src, 7);
       table.setPiece(kx_src, 7, PieceHandlers::createPiece(NAP, NONE));
       table.setPiece(kx_src, ky_src + 1, moved_rook);
-
+      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
     } else { // the left rook is moved
       moved_rook = table.getPiece(kx_src, 0);
       table.setPiece(kx_src, 0, PieceHandlers::createPiece(NAP, NONE));
       table.setPiece(kx_src, ky_src - 1, moved_rook);
+      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
     }
   }
   
@@ -107,13 +130,15 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   if (move->getReplacement().has_value())
   {
     table.setPiece(move->destination_idx.value(), PieceHandlers::createPiece(move->getReplacement().value(), sideToMove));
-  }
+  } 
+    
   table.update_states();
 
   table.last_move = *move;
+  *output << (unsigned int)table.rocinfo << "\n";
 }
 
-Move* Bot::calculateNextMove(PlaySide sideToMove) {
+Move Bot::calculateNextMove(PlaySide sideToMove) {
   /* Play move for the side the engine is playing (Hint: Main.getEngineSide())
    * Make sure to record your move in custom structures before returning.
    *
@@ -124,8 +149,9 @@ Move* Bot::calculateNextMove(PlaySide sideToMove) {
   std::srand(std::time(NULL));
   int index = std::rand() % allMoves.size();
   Move::convertIdxToStr(allMoves[index]);
+  recordMove(&allMoves[index], sideToMove);
 
-  return &allMoves[index];
+  return allMoves[index];
 }
 
 std::string Bot::getBotName() { return Bot::BOT_NAME; }
