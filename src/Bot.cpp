@@ -38,73 +38,18 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
         table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
     }
 
-
-  // check if castle: the only way a king can move 2 squares is by castling
-  if (move->source_idx.has_value() && move->destination_idx.has_value() && 
-      PieceHandlers::getType(table.getPiece((move->source_idx.value()))) == KING &&
-      abs(move->source_idx.value().second - move->destination_idx.value().second) == 2)
+  if (checkCastling(table, move, sideToMove))
   {
-    int kx_src = move->source_idx.value().first;
+    table.update_states();
 
-    int ky_src = move->source_idx.value().second;
-    int ky_dst = move->destination_idx.value().second;
-    
-    uint8_t moved_rook;
-    if (ky_dst > ky_src) // the right rook should be moved
-    {
-      moved_rook = table.getPiece(kx_src, 7);
-      table.setPiece(kx_src, 7, PieceHandlers::createPiece(NAP, NONE));
-      table.setPiece(kx_src, ky_src + 1, moved_rook);
-      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
-    } else { // the left rook is moved
-      moved_rook = table.getPiece(kx_src, 0);
-      table.setPiece(kx_src, 0, PieceHandlers::createPiece(NAP, NONE));
-      table.setPiece(kx_src, ky_src - 1, moved_rook);
-      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
-    }
+    table.last_move = *move;
+    *output << (unsigned int)table.rocinfo << "\n";
+    return;
   }
   
+  
+  checkEnPassant(table, move, sideToMove);
 
-  // checks if the last move forwarded the piece 2 positions on the same column, if that piece is a pawn
-  // and if the current move is a normal move(has src + dst) and it moves a pawn as well
-  if (table.last_move.destination_idx.has_value() &&
-      table.last_move.source_idx.has_value() &&
-      abs(table.last_move.destination_idx.value().first - table.last_move.source_idx.value().first) == 2 &&
-      PieceHandlers::getType(table.getPiece(table.last_move.destination_idx.value())) == PAWN &&
-      move->source_idx.has_value() &&
-      move->destination_idx.has_value() &&
-      PieceHandlers::getType(table.getPiece(move->source_idx.value())) == PAWN)
-  {
-    
-    int x_src = move->source_idx.value().first;
-    int y_src = move->source_idx.value().second;
-
-    int x_dst = move->destination_idx.value().first;
-    int y_dst = move->destination_idx.value().second;
-
-    int x_last = table.last_move.destination_idx.value().first;
-    int y_last = table.last_move.destination_idx.value().second;
-
-    // if before the move is made, the two pawns are not on the same line, at the distance
-    // of 1 column apart, there's no way it's an en-passant
-    if (x_src == x_last && abs(y_src - y_last) == 1)
-    {
-      // offset = the row behind last_move piece, despite it's colour
-      int offset = 0;
-      
-      if (sideToMove == BLACK)
-        offset = +1;
-      else
-        offset = -1;
-
-      if (x_dst == x_last + offset && PieceHandlers::getType(table.getPiece(x_dst, y_dst)) == NAP)
-      {
-        // TODO:
-        // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
-        table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
-      }
-    }
-  }
 
   uint8_t moved_piece = PieceHandlers::createPiece(NAP, NONE);
 
@@ -155,3 +100,79 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
 }
 
 std::string Bot::getBotName() { return Bot::BOT_NAME; }
+
+bool checkEnPassant(Table table, Move *move, PlaySide sideToMove)
+{
+  // checks if the last move forwarded the piece 2 positions on the same column, if that piece is a pawn
+  // and if the current move is a normal move(has src + dst) and it moves a pawn as well
+  if (table.last_move.destination_idx.has_value() &&
+      table.last_move.source_idx.has_value() &&
+      abs(table.last_move.destination_idx.value().first - table.last_move.source_idx.value().first) == 2 &&
+      PieceHandlers::getType(table.getPiece(table.last_move.destination_idx.value())) == PAWN &&
+      move->source_idx.has_value() &&
+      move->destination_idx.has_value() &&
+      PieceHandlers::getType(table.getPiece(move->source_idx.value())) == PAWN)
+  {
+    
+    int x_src = move->source_idx.value().first;
+    int y_src = move->source_idx.value().second;
+
+    int x_dst = move->destination_idx.value().first;
+    int y_dst = move->destination_idx.value().second;
+
+    int x_last = table.last_move.destination_idx.value().first;
+    int y_last = table.last_move.destination_idx.value().second;
+
+    // if before the move is made, the two pawns are not on the same line, at the distance
+    // of 1 column apart, there's no way it's an en-passant
+    if (x_src == x_last && abs(y_src - y_last) == 1)
+    {
+      // offset = the row behind last_move piece, despite it's colour
+      int offset = 0;
+      
+      if (sideToMove == BLACK)
+        offset = +1;
+      else
+        offset = -1;
+
+      if (x_dst == x_last + offset && PieceHandlers::getType(table.getPiece(x_dst, y_dst)) == NAP)
+      {
+        // TODO:
+        // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+        table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool checkCastling(Table &table, Move *move, PlaySide &sideToMove)
+{
+  // check if castle: the only way a king can move 2 squares is by castling
+  if (move->source_idx.has_value() && move->destination_idx.has_value() && 
+      PieceHandlers::getType(table.getPiece((move->source_idx.value()))) == KING &&
+      abs(move->source_idx.value().second - move->destination_idx.value().second) == 2)
+  {
+    int kx_src = move->source_idx.value().first;
+
+    int ky_src = move->source_idx.value().second;
+    int ky_dst = move->destination_idx.value().second;
+    
+    uint8_t moved_rook;
+    table.pieceHasMoved(sideToMove == WHITE ? 0b00001111 : 0b11110000);
+    if (ky_dst > ky_src) // the right rook should be moved
+    {
+      moved_rook = table.getPiece(kx_src, 7);
+      table.setPiece(kx_src, 7, PieceHandlers::createPiece(NAP, NONE));
+      table.setPiece(kx_src, ky_src + 1, moved_rook);
+    } else { // the left rook is moved
+
+      moved_rook = table.getPiece(kx_src, 0);
+      table.setPiece(kx_src, 0, PieceHandlers::createPiece(NAP, NONE));
+      table.setPiece(kx_src, ky_src - 1, moved_rook);
+    }
+    return true;
+  }
+  return false;
+}
