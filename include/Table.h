@@ -28,6 +28,7 @@ class Table {
 	Move last_move;
 	uint8_t rocinfo;
 	int8_t wKx, wKy, bKx, bKy;
+	std::vector<Piece> capturedByWhite, capturedByBlack;
  private:
   	
 };

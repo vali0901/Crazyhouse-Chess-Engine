@@ -22,7 +22,7 @@ class PieceHandlers {
         static bool isAttackerOfTheKing(uint8_t piececode, PlaySide attacked_color);
         static std::vector<Move> calculateMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, uint8_t rocinfo, std::optional<std::vector<Move>> constraints);
         static std::vector<Move> calculateProtectorOfTheKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move);
-        static std::vector<Move> calculateKingInCheckMoves(uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move);
+        static std::vector<Move> calculateKingInCheckMoves(uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move, std::vector<Piece> capturedPieces);
     	static bool pieceHasMoved(uint8_t rocinfo, uint8_t mask);
         
     private:
