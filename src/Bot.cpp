@@ -106,12 +106,6 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
         idx = i;
         break;
       }
-    if (isEnPassant(table, &allMoves[i], sideToMove))
-    {
-      *output << "en passant move available\n";
-      idx = i;
-      break;
-    }
   }
   if (idx == -1) {
     std::srand(std::time(NULL));
@@ -278,52 +272,4 @@ void printTableBits(uint8_t table[8][8]) {
         }
         fprintf(f_out,"\n");
     }
-}
-
-
-bool isEnPassant(Table &table, Move *move, PlaySide &sideToMove)
-{
-  // checks if the last move forwarded the piece 2 positions on the same column, if that piece is a pawn
-  // and if the current move is a normal move(has src + dst) and it moves a pawn as well
-  if (table.last_move.destination_idx.has_value() &&
-      table.last_move.source_idx.has_value() &&
-      abs(table.last_move.destination_idx.value().first - table.last_move.source_idx.value().first) == 2 &&
-      PieceHandlers::getType(table.getPiece(table.last_move.destination_idx.value())) == PAWN &&
-      move->source_idx.has_value() &&
-      move->destination_idx.has_value() &&
-      PieceHandlers::getType(table.getPiece(move->source_idx.value())) == PAWN)
-  {
-    
-    int x_src = move->source_idx.value().first;
-    int y_src = move->source_idx.value().second;
-
-    int x_dst = move->destination_idx.value().first;
-    int y_dst = move->destination_idx.value().second;
-
-    int x_last = table.last_move.destination_idx.value().first;
-    int y_last = table.last_move.destination_idx.value().second;
-
-    // if before the move is made, the two pawns are not on the same line, at the distance
-    // of 1 column apart, there's no way it's an en-passant
-    if (x_src == x_last && abs(y_src - y_last) == 1)
-    {
-      // offset = the row behind last_move piece, despite it's colour
-      int offset = 0;
-      
-      if (sideToMove == BLACK)
-        offset = +1;
-      else
-        offset = -1;
-
-      if (x_dst == x_last + offset && PieceHandlers::getType(table.getPiece(x_dst, y_dst)) == NAP)
-      {
-        // TODO:
-        // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
-        // fprintf(f_out,"en passant\n");
-        // table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
-        return true;
-      }
-    }
-  }
-  return false;
 }
