@@ -97,4 +97,10 @@ Move *Move::dropIn(std::optional<std::string> destination,
   return new Move({}, destination, replacement);
 }
 
+Move *Move::dropIn(std::optional<std::pair<int8_t, int8_t>> destination,
+                   std::optional<Piece> replacement)
+{
+  return new Move({}, destination, replacement);
+}
+
 Move *Move::resign() { return new Move("", "", {}); }

@@ -135,7 +135,9 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
     return calculateMoves(piececode, init_x, init_y, table, last_move, 0, constraints);
 }
 
-std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move) {
+std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int8_t kx, int8_t ky, uint8_t table[8][8], Move last_move, std::vector<Piece> capturedPieces) {
+    std::vector<Move> moves;
+    
     // get attacker piece ant its coords
     uint8_t attackercode = 0;
     int8_t attx, atty;
@@ -155,10 +157,10 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
 
     switch (PieceHandlers::getType(attackercode))
     {
-    case PAWN: case KNIGHT:
+    case PAWN: case KNIGHT:  // we can not drop in
         constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(attx, atty)));
         break;
-    case BISHOP: case ROOK: case QUEEN:
+    case BISHOP: case ROOK: case QUEEN: // we can drop in on empty slots between the attacker and king
         dx = (attx - kx < 0) ? -1 : (attx - kx == 0) ? 0 : 1;
         dy = (atty - ky < 0) ? -1 : (atty - ky == 0) ? 0 : 1;
 
@@ -168,6 +170,15 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
         do {
             x += dx;
             y += dy;
+            
+            // drop-in moves
+            if(PieceHandlers::getType(table[x][y]) == NAP) 
+                for(auto piece : capturedPieces) {
+                    if(piece == PAWN && (x == 0 || x == 7))
+                        continue;
+                        
+                    moves.push_back(*Move::dropIn(std::pair(x, y), piece));
+                }
 
             constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(x, y)));
         } while (PieceHandlers::getType(table[x][y]) == NAP);
@@ -185,7 +196,6 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
     
     // calculate all possible moves for all pieces, considering constraints
 
-    std::vector<Move> moves;
     for(int i = 0; i < 8; i++)
         for(int j = 0; j < 8; j++)
             if(PieceHandlers::getType(table[i][j]) != NAP &&
@@ -194,6 +204,7 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
                 std::vector<Move> helper = calculateMoves(table[i][j], i, j, table, last_move, 0, table[i][j] == kingcode ? king_constraints : constraints);
                 moves.insert(moves.end(), helper.begin(), helper.end());
             }
+
     return moves;
 }
 

@@ -218,9 +218,9 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 	*/
 	if(kingIsInCheck(turn)) {
 		if(turn == WHITE)
-			return PieceHandlers::calculateKingInCheckMoves(table[wKx][wKy], wKx, wKy, table, last_move);
+			return PieceHandlers::calculateKingInCheckMoves(table[wKx][wKy], wKx, wKy, table, last_move, capturedByWhite);
 		else
-			return PieceHandlers::calculateKingInCheckMoves(table[bKx][bKy], bKx, bKy, table, last_move);
+			return PieceHandlers::calculateKingInCheckMoves(table[bKx][bKy], bKx, bKy, table, last_move, capturedByBlack);
 	}
 
 	std::vector<Move> moves;
@@ -239,6 +239,24 @@ std::vector<Move> Table::generateAllPossibleMoves(PlaySide turn, Move last_move)
 				moves.insert(moves.end(), helper.begin(), helper.end());
 			}
 		}
+
+	// generate drop-in moves
+	std::vector<Piece> &capturedPieces = (turn == WHITE) ? capturedByWhite : capturedByBlack;
+
+	// go through eachi slot on the table, if it is empty generate all possible drop-in moves
+	for(int8_t i = 0; i < 8; i++)
+		for(int8_t j = 0; j < 8; j++) {
+			if(PieceHandlers::getType(table[i][j]) != NAP)
+				continue;
+
+			for(auto piece : capturedPieces) {
+				if(piece == PAWN && (i == 0 || i == 7))
+					continue;
+
+				moves.push_back(*Move::dropIn(std::pair(i, j), piece));
+			}
+		}
+
 	return moves;
 }
 

@@ -81,6 +81,9 @@ class Move {
    */
   static Move* dropIn(std::optional<std::string> destination,
                       std::optional<Piece> replacement);
+  static Move *dropIn(std::optional<std::pair<int8_t, int8_t>> destination,
+                   std::optional<Piece> replacement);
+
   static Move* resign();
 
   static void convertStrToIdx(Move &move);
