@@ -150,7 +150,7 @@ bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove)
 
     // if before the move is made, the two pawns are not on the same line, at the distance
     // of 1 column apart, there's no way it's an en-passant
-    if (x_src == x_last && abs(y_src - y_last) == 1)
+    if (x_src == x_last && abs(y_src - y_last) == 1 && abs(y_dst - y_src) == 1)
     {
       // offset = the row behind last_move piece, despite it's colour
       int offset = 0;
