@@ -228,7 +228,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
     if(PieceHandlers::getType(table[x + dx][y]) == NAP) {
         // reached the end of the table, promotion
         if(x + dx == 0 || x + dx == 7) {
-            // add promotion move, but for now do it as it is
+            // add promotion move
             possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), QUEEN));
             possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), ROOK));
             possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), KNIGHT));
@@ -252,8 +252,17 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
         if(y + dy < 0 || y + dy > 7)
             continue;
         if(PieceHandlers::getType(table[x + dx][y + dy]) != NAP &&
-            PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode))
-                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+            PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode)) {
+                if(x + dx == 0 || x + dx == 7) {
+                    // add promotion move
+                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), QUEEN));
+                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), ROOK));
+                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), KNIGHT));
+                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), BISHOP));
+                } else {
+                    possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+                }
+        }
 
         // if there is a pawn to my right or to my left, maybe we can do en-passant
         if(PieceHandlers::getType(table[x][y + dy]) == PAWN) //|| PieceHandlers::getType(table[x][y - 1]) == PAWN)
