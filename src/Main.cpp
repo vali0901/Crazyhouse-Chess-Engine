@@ -13,6 +13,7 @@
 static PlaySide sideToMove;
 static PlaySide engineSide;
 std::ofstream *output;
+FILE *f_out;
 
 PlaySide getEngineSide()
 {
@@ -368,6 +369,8 @@ int main()
   engine->performHandshake();
   std::ofstream out("log");
   output = &out;
+  f_out = fopen("log2", "w");
+
   while (true)
   {
     /* Fetch and execute next command */
