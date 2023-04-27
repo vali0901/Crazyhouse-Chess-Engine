@@ -249,7 +249,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
     // capture
     // capture the enemy to the right or left, if it's there
     for(auto dy : {1, -1}) {
-        if(y + dy > 7 && y + dy < 0)
+        if(y + dy < 0 || y + dy > 7)
             continue;
         if(PieceHandlers::getType(table[x + dx][y + dy]) != NAP &&
             PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode))
