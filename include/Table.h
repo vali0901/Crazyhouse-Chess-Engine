@@ -22,7 +22,9 @@ class Table {
 	bool kingIsInCheck(PlaySide color);
 	void pieceHasMoved(uint8_t mask);
   	void update_states();
-	std::vector<Move> generateAllPossibleMoves(PlaySide turn, Move last_move);
+	void generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<Move> &moves);
+    // void addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+	void addToCaptured(Table &table, Piece piece, PlaySide playside);
 	// temporary public
 	uint8_t table[8][8];
 	Move last_move;
