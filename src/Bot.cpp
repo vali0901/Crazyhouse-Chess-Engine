@@ -33,12 +33,12 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
         table.bKy = move->destination_idx->second;
         table.pieceHasMoved(0b11111101);
       }
-    } else if (PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
+    } else if (move->source_idx.has_value() && PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
       // left rook has moved
-      if(move->destination_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->destination_idx.value() == std::pair((int8_t)7, (int8_t)0))
+      if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)0))
         table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
       // right rook has moved
-      if(move->destination_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->destination_idx.value() == std::pair((int8_t)7, (int8_t)7))
+      if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)7))
         table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
     }
 
@@ -80,6 +80,8 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
 
   printTableBits(table.table);
   fprintf(f_out, "\n\n");
+
+  
 
 }
 
