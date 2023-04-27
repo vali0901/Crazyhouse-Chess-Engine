@@ -15,7 +15,6 @@ void printTable(uint8_t table[8][8]);
 void printTableBits(uint8_t table[8][8]);
 
 extern FILE* f_out;
-bool isEnPassant(Table &table, Move *move, PlaySide &sideToMove);
 
 Bot::Bot() { /* Initialize custom fields here */
 }
