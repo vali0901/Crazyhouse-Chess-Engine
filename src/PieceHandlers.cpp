@@ -295,6 +295,22 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
                 moves.push_back(pmove);
                 continue;
             }
+    
+    // SPECIAL CASE
+    // if we have a constraint and the attacker is a pawn and i can do en-passant on him, i do it
+    if(constraints.has_value() && constraints->size() == 1)
+        for(auto dy : {1, -1}) {
+            if(y + dy < 0 || y + dy > 7)
+                continue;
+
+            // if there is a pawn to my right or to my left, maybe we can do en-passant
+            if(PieceHandlers::getType(table[x][y + dy]) == PAWN) //|| PieceHandlers::getType(table[x][y - 1]) == PAWN)
+                // check if it is available for en-passant and if this is the attacker (his position must be in the contraints)
+                if(last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
+                    abs(last_move.destination_idx->first - last_move.source_idx->first) == 2 &&
+                    constraints.value()[0].destination_idx.value() == last_move.destination_idx.value())
+                    moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+        }
 
     return moves;
 }
