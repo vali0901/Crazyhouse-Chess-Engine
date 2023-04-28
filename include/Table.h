@@ -26,6 +26,7 @@ class Table {
     // void addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
 	void addToCaptured(Table &table, Piece piece, PlaySide playside);
 	// temporary public
+	std::vector<std::pair<int8_t, int8_t>> promotedPawnsWhite, promotedPawnsBlack;
 	uint8_t table[8][8];
 	Move last_move;
 	uint8_t rocinfo;

@@ -234,7 +234,6 @@ void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<
 		return;
 	}
 
-	// std::vector<Move> moves;
 	for(int i = 0; i < 8; i ++)
 		for(int j = 0; j < 8; j++) {
 			if(PieceHandlers::isProtectorOfTheKing(table[i][j], turn)) {
@@ -255,10 +254,6 @@ void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<
 	std::vector<Piece> &capturedPieces = (turn == WHITE) ? capturedByWhite : capturedByBlack;
 
 	// go through eachi slot on the table, if it is empty generate all possible drop-in moves
-
-	fprintf(f_out, "i can put it here:\n");
-	//TODO capturedPieces back
-
 	for(int8_t i = 0; i < 8; i++) {
 		for(int8_t j = 0; j < 8; j++) {
 			if(PieceHandlers::getType(table[i][j]) != NAP)
@@ -268,14 +263,10 @@ void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<
 				if(piece == PAWN && (i == 0 || i == 7))
 					continue;
 				
-				fprintf(f_out, "%d %d ", (int)i, (int)j);
-				
 				moves.push_back(*Move::dropIn(std::pair(i, j), piece));
 			}
 		}
 	}
-	// fprintf(f_out, "\n");
-	// return moves;
 }
 
 Table::Table() {

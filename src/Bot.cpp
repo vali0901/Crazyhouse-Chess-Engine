@@ -10,40 +10,22 @@
 #include <iostream>
 
 extern std::ofstream *output;
-const std::string Bot::BOT_NAME = "enpassant"; /* Edit this, escaped characters are forbidden */
+const std::string Bot::BOT_NAME = "en-passant"; /* Edit this, escaped characters are forbidden */
 void printTable(uint8_t table[8][8]);
 void printTableBits(uint8_t table[8][8]);
 
 extern FILE* f_out;
-void printPiecesAvailable(Table &table);
 
 Bot::Bot() { /* Initialize custom fields here */
 }
 
+
 void Bot::recordMove(Move* move, PlaySide sideToMove) {
   Move::convertStrToIdx(*move);
-  
-  if (!move->isDropIn()) {
-    if(PieceHandlers::getType(table.getPiece(move->source_idx.value())) == KING) {
-    if(PieceHandlers::getColor(table.getPiece(move->source_idx.value())) == WHITE) {
-      table.wKx = move->destination_idx->first;
-      table.wKy = move->destination_idx->second;
-      table.pieceHasMoved(0b11011111);
-    } else {
-      table.bKx = move->destination_idx->first;
-      table.bKy = move->destination_idx->second;
-      table.pieceHasMoved(0b11111101);
-    }
-  } else if (PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
-    // left rook has moved
-    if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)0))
-      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
-    // right rook has moved
-    if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)7))
-      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
-    }
-  }
-    
+
+  checkPromotedPawns(move, sideToMove, table);
+
+  checkImportantPiecesThatMoved(move, table);
 
   checkCastling(table, move, sideToMove);
   
@@ -62,29 +44,40 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   if (move->destination_idx.has_value())
   {
     // check if it captured something
-    if (PieceHandlers::getType(table.getPiece(move->destination_idx.value())) != NAP)
-      table.addToCaptured(table, PieceHandlers::getType(table.getPiece(move->destination_idx.value())), sideToMove);
+    if (PieceHandlers::getType(table.getPiece(move->destination_idx.value())) != NAP) {
+      // piece = the piece that the player can add to their captured pieces
+      // if the piece was a promoted pawn, the player that captured it received a pawn
+      Piece piece = PieceHandlers::getType(table.getPiece(move->destination_idx.value()));
+
+      std::vector<std::pair<int8_t, int8_t>> &promotedPieces = (sideToMove == BLACK) ? table.promotedPawnsWhite : table.promotedPawnsBlack;
+      // fprintf(f_out, "size promoted %ld\n", promotedPieces.size());
+      // fprintf(f_out, "size promoted black %ld\n", table.promotedPawnsBlack.size());
+      // for (auto pos : table.promotedP
+      for (unsigned long i = 0; i < promotedPieces.size(); i++) {
+        if (promotedPieces[i] == move->destination_idx.value()) {
+          piece = PAWN;
+
+          promotedPieces[i] = promotedPieces.back();
+          promotedPieces.pop_back();
+
+          break;
+        }
+      } 
+      table.addToCaptured(table, piece, sideToMove);
+    }
 
     table.setPiece(move->destination_idx.value(), moved_piece);
   }
-  // drop in remove from the array of pieces available
+  // drop in, remove from the array of pieces available
   if (!move->source_idx.has_value() && move->destination_idx.has_value() && move->replacement.has_value()) {
-    *output << "is drop in\n";
-    if (sideToMove == BLACK) {
-      for (unsigned long i = 0; i < table.capturedByBlack.size(); i++) {
-        if (table.capturedByBlack[i] == move->replacement) {
-          table.capturedByBlack[i] = table.capturedByBlack.back();
-          table.capturedByBlack.pop_back();
-          break;
-        }
-      }
-    } else {
-      for (unsigned long i = 0; i < table.capturedByWhite.size(); i++) {
-        if (table.capturedByWhite[i] == move->replacement) {
-          table.capturedByWhite[i] = table.capturedByWhite.back();
-          table.capturedByWhite.pop_back();
-          break;
-        }
+
+    std::vector<Piece> &capturedPieces = (sideToMove == BLACK) ? table.capturedByBlack : table.capturedByWhite;   
+    
+    for (unsigned long i = 0; i < capturedPieces.size(); i++) {
+      if (capturedPieces[i] == move->replacement) {
+        capturedPieces[i] = capturedPieces.back();
+        capturedPieces.pop_back();
+        break;
       }
     }
   }
@@ -100,11 +93,13 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   printTable(table.table);
   fprintf(f_out, "\n\n");
 
-  // printTableBits(table.table);
-  // fprintf(f_out, "\n\n");
-  
   printPiecesAvailable(table);
 
+  fprintf(f_out, "promoted Pawns White\n");
+  for (auto piece : table.promotedPawnsWhite) {
+    fprintf(f_out, "%d %d\t", piece.first, piece.second);
+  }
+  fprintf(f_out, "\n\n");
 
 }
 
@@ -229,6 +224,48 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove)
     return true;
   }
   return false;
+}
+
+void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table) {
+  // fprintf(f_out, "in checkPromotedPawns\n");
+  if (move->source_idx.has_value() && move->destination_idx.has_value() && move->replacement.has_value()) {
+    fprintf(f_out, "promotionnnn\n");
+    if (sideToMove == BLACK)
+      table.promotedPawnsBlack.push_back(move->destination_idx.value());
+    else
+      table.promotedPawnsWhite.push_back(move->destination_idx.value());
+  }
+  if (move->source_idx.has_value() && move->destination_idx.has_value() && !move->replacement.has_value()) {
+    std::vector<std::pair<int8_t, int8_t>> &promotedPawns = sideToMove == BLACK ? table.promotedPawnsBlack : table.promotedPawnsWhite;
+    for (auto& pos : promotedPawns) {
+      if (pos == move->source_idx.value()) {
+        pos = move->destination_idx.value();
+      }
+    }
+  }
+}
+
+void checkImportantPiecesThatMoved(Move *move, Table &table) {
+   if (!move->isDropIn()) {
+    if(PieceHandlers::getType(table.getPiece(move->source_idx.value())) == KING) {
+    if(PieceHandlers::getColor(table.getPiece(move->source_idx.value())) == WHITE) {
+      table.wKx = move->destination_idx->first;
+      table.wKy = move->destination_idx->second;
+      table.pieceHasMoved(0b11011111);
+    } else {
+      table.bKx = move->destination_idx->first;
+      table.bKy = move->destination_idx->second;
+      table.pieceHasMoved(0b11111101);
+    }
+  } else if (PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
+    // left rook has moved
+    if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)0))
+      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
+    // right rook has moved
+    if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)7))
+      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
+    }
+  }
 }
 
 void printTable(uint8_t table[8][8]) {
