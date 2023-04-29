@@ -10,7 +10,7 @@
 #include <iostream>
 
 extern std::ofstream *output;
-const std::string Bot::BOT_NAME = "enpassant"; /* Edit this, escaped characters are forbidden */
+const std::string Bot::BOT_NAME = "en-passant"; /* Edit this, escaped characters are forbidden */
 void printTable(uint8_t table[8][8]);
 void printTableBits(uint8_t table[8][8]);
 
@@ -19,28 +19,13 @@ extern FILE* f_out;
 Bot::Bot() { /* Initialize custom fields here */
 }
 
-void Bot::recordMove(Move* move, PlaySide sideToMove) {
-   Move::convertStrToIdx(*move);
 
-  // mark the relevant moved pieces as moved (might crash (100 %) for drop-in moves)
-    if(PieceHandlers::getType(table.getPiece(move->source_idx.value())) == KING) {
-      if(PieceHandlers::getColor(table.getPiece(move->source_idx.value())) == WHITE) {
-        table.wKx = move->destination_idx->first;
-        table.wKy = move->destination_idx->second;
-        table.pieceHasMoved(0b11011111);
-      } else {
-        table.bKx = move->destination_idx->first;
-        table.bKy = move->destination_idx->second;
-        table.pieceHasMoved(0b11111101);
-      }
-    } else if (move->source_idx.has_value() && PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
-      // left rook has moved
-      if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)0))
-        table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
-      // right rook has moved
-      if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)7))
-        table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
-    }
+void Bot::recordMove(Move* move, PlaySide sideToMove) {
+  Move::convertStrToIdx(*move);
+
+  checkPromotedPawns(move, sideToMove, table);
+
+  checkImportantPiecesThatMoved(move, table);
 
   checkCastling(table, move, sideToMove);
   
@@ -59,12 +44,42 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   if (move->destination_idx.has_value())
   {
     // check if it captured something
-    if (table.getPiece(move->destination_idx.value()) != NAP)
-    {
-      // TODO:
-      // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+    if (PieceHandlers::getType(table.getPiece(move->destination_idx.value())) != NAP) {
+      // piece = the piece that the player can add to their captured pieces
+      // if the piece was a promoted pawn, the player that captured it received a pawn
+      Piece piece = PieceHandlers::getType(table.getPiece(move->destination_idx.value()));
+
+      std::vector<std::pair<int8_t, int8_t>> &promotedPieces = (sideToMove == BLACK) ? table.promotedPawnsWhite : table.promotedPawnsBlack;
+      // fprintf(f_out, "size promoted %ld\n", promotedPieces.size());
+      // fprintf(f_out, "size promoted black %ld\n", table.promotedPawnsBlack.size());
+      // for (auto pos : table.promotedP
+      for (unsigned long i = 0; i < promotedPieces.size(); i++) {
+        if (promotedPieces[i] == move->destination_idx.value()) {
+          piece = PAWN;
+
+          promotedPieces[i] = promotedPieces.back();
+          promotedPieces.pop_back();
+
+          break;
+        }
+      } 
+      table.addToCaptured(table, piece, sideToMove);
     }
+
     table.setPiece(move->destination_idx.value(), moved_piece);
+  }
+  // drop in, remove from the array of pieces available
+  if (!move->source_idx.has_value() && move->destination_idx.has_value() && move->replacement.has_value()) {
+
+    std::vector<Piece> &capturedPieces = (sideToMove == BLACK) ? table.capturedByBlack : table.capturedByWhite;   
+    
+    for (unsigned long i = 0; i < capturedPieces.size(); i++) {
+      if (capturedPieces[i] == move->replacement) {
+        capturedPieces[i] = capturedPieces.back();
+        capturedPieces.pop_back();
+        break;
+      }
+    }
   }
 
   // in case of promotion/dropIn, the destination is replaced with "replacement"
@@ -78,10 +93,13 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   printTable(table.table);
   fprintf(f_out, "\n\n");
 
-  printTableBits(table.table);
-  fprintf(f_out, "\n\n");
+  printPiecesAvailable(table);
 
-  
+  fprintf(f_out, "promoted Pawns White\n");
+  for (auto piece : table.promotedPawnsWhite) {
+    fprintf(f_out, "%d %d\t", piece.first, piece.second);
+  }
+  fprintf(f_out, "\n\n");
 
 }
 
@@ -92,20 +110,26 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
    * Return move that you are willing to submit
    * Move is to be constructed via one of the factory methods declared in Move.h */
 
-  std::vector<Move> allMoves = table.generateAllPossibleMoves(sideToMove, table.last_move);
+  std::vector<Move> allMoves;
+  table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
 
   int idx = -1;
-  for (unsigned i = 0; i < allMoves.size(); i++)
+  for (unsigned long i = 0; i < allMoves.size(); i++)
   {
     
-    if (allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && 
-      PieceHandlers::getType(table.getPiece((allMoves[i].source_idx.value()))) == KING &&
-      abs(allMoves[i].source_idx.value().second - allMoves[i].destination_idx.value().second) == 2)
-      {
-        idx = i;
-        break;
-      }
+    // if (allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && 
+    //   PieceHandlers::getType(table.getPiece((allMoves[i].source_idx.value()))) == KING &&
+    //   abs(allMoves[i].source_idx.value().second - allMoves[i].destination_idx.value().second) == 2)
+    //   {
+    //     idx = i;
+    //     break;
+    //   }
+    if (!allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && allMoves[i].replacement.has_value()) {
+      idx = i;
+      break;
+    }
   }
+
   if (idx == -1) {
     std::srand(std::time(NULL));
     int index = std::rand() % allMoves.size();
@@ -114,11 +138,9 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
 
     return allMoves[index];  
   } else {
-    *output << (int)allMoves[idx].source_idx.value().first << ' ' << (int)allMoves[idx].source_idx.value().second<<'\n';
-    *output << (int)allMoves[idx].destination_idx.value().first << ' ' << (int)allMoves[idx].destination_idx.value().second<<'\n'; 
-    *output << "idx = " << idx << '\n';
     Move::convertIdxToStr(allMoves[idx]);
     recordMove(&allMoves[idx], sideToMove);
+
     return allMoves[idx];
   }
   
@@ -162,8 +184,8 @@ bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove)
 
       if (x_dst == x_last + offset && PieceHandlers::getType(table.getPiece(x_dst, y_dst)) == NAP)
       {
-        // TODO:
-        // addToCaptured(table.getPiece(move->destination_idx.value()), sideToMove);
+        table.addToCaptured(table, PieceHandlers::getType(table.getPiece(table.last_move.destination_idx.value())), sideToMove);
+
         fprintf(f_out,"en passant\n");
         table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
         return true;
@@ -202,6 +224,48 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove)
     return true;
   }
   return false;
+}
+
+void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table) {
+  // fprintf(f_out, "in checkPromotedPawns\n");
+  if (move->source_idx.has_value() && move->destination_idx.has_value() && move->replacement.has_value()) {
+    fprintf(f_out, "promotionnnn\n");
+    if (sideToMove == BLACK)
+      table.promotedPawnsBlack.push_back(move->destination_idx.value());
+    else
+      table.promotedPawnsWhite.push_back(move->destination_idx.value());
+  }
+  if (move->source_idx.has_value() && move->destination_idx.has_value() && !move->replacement.has_value()) {
+    std::vector<std::pair<int8_t, int8_t>> &promotedPawns = sideToMove == BLACK ? table.promotedPawnsBlack : table.promotedPawnsWhite;
+    for (auto& pos : promotedPawns) {
+      if (pos == move->source_idx.value()) {
+        pos = move->destination_idx.value();
+      }
+    }
+  }
+}
+
+void checkImportantPiecesThatMoved(Move *move, Table &table) {
+   if (!move->isDropIn()) {
+    if(PieceHandlers::getType(table.getPiece(move->source_idx.value())) == KING) {
+    if(PieceHandlers::getColor(table.getPiece(move->source_idx.value())) == WHITE) {
+      table.wKx = move->destination_idx->first;
+      table.wKy = move->destination_idx->second;
+      table.pieceHasMoved(0b11011111);
+    } else {
+      table.bKx = move->destination_idx->first;
+      table.bKy = move->destination_idx->second;
+      table.pieceHasMoved(0b11111101);
+    }
+  } else if (PieceHandlers::getType(table.getPiece(move->source_idx.value())) == ROOK) {
+    // left rook has moved
+    if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)0) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)0))
+      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b10111111 : 0b11111011 );
+    // right rook has moved
+    if(move->source_idx.value() == std::pair((int8_t)0, (int8_t)7) || move->source_idx.value() == std::pair((int8_t)7, (int8_t)7))
+      table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
+    }
+  }
 }
 
 void printTable(uint8_t table[8][8]) {
@@ -271,4 +335,57 @@ void printTableBits(uint8_t table[8][8]) {
         }
         fprintf(f_out,"\n");
     }
+}
+
+void printPiecesAvailable(Table &table) {
+
+  fprintf(f_out, "pieces available for WHITE\n");
+  for (auto piece : table.capturedByWhite) {
+    switch (piece) {
+      case PAWN:
+        fprintf(f_out, "PAWN ");
+        break;
+      case ROOK:
+        fprintf(f_out, "ROOK ");
+        break;
+      case KNIGHT:
+        fprintf(f_out, "KNIGHT ");
+        break;
+      case BISHOP:
+        fprintf(f_out, "BISHOP ");
+        break;
+      case QUEEN:
+        fprintf(f_out, "QUEEN ");
+        break;
+      default:
+        fprintf(f_out, "NAP?weird ");
+        break;
+    }
+  }  
+  fprintf(f_out, "\n\n");
+
+    fprintf(f_out, "pieces available for BLACK\n");
+  for (auto piece : table.capturedByBlack) {
+    switch (piece) {
+      case PAWN:
+        fprintf(f_out, "PAWN ");
+        break;
+      case ROOK:
+        fprintf(f_out, "ROOK ");
+        break;
+      case KNIGHT:
+        fprintf(f_out, "KNIGHT ");
+        break;
+      case BISHOP:
+        fprintf(f_out, "BISHOP ");
+        break;
+      case QUEEN:
+        fprintf(f_out, "QUEEN ");
+        break;
+      default:
+        fprintf(f_out, "NAP?weird ");
+        break;
+    }
+  }  
+  fprintf(f_out, "\n\n");
 }
