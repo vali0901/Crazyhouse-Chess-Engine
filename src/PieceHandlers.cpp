@@ -3,8 +3,6 @@
 #include "Move.h"
 
 #include <bits/stdc++.h>
-extern std::ofstream *output;
-
 
 const std::vector<std::pair<int8_t, int8_t>> PieceHandlers::knight_directions =
     {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
@@ -220,7 +218,6 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
 
 std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
     /*
-        TODO:
         Generate all the moves this pawn can make on this table.
         This means it can either go up / down (depending on color)
         only if there is an empty slot available (dont forget it can
@@ -257,7 +254,6 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
             }
     }
 
-    // capture
     // capture the enemy to the right or left, if it's there
     for(auto dy : {1, -1}) {
         if(y + dy < 0 || y + dy > 7)
@@ -318,7 +314,6 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
 
 std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
     /*
-        TODO:
         Generate all the possible moves of this piece, go through
         the directions declared in PieceHandlers, check if the
         possible_move's coordinates are valid (check the Table::update_states()
@@ -360,7 +355,6 @@ std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t 
 
 std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
     /*
-        TODO:
         Generate all the possible moves of this piece, go through
         the directions declared in PieceHandlers, check if the
         possible_move's coordinates are valid (check the Table::update_states()
@@ -410,7 +404,6 @@ std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x,
 
 std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
     /*
-        TODO:
         Generate all the possible moves of this piece, go through
         the directions declared in PieceHandlers, check if the
         possible_move's coordinates are valid (check the Table::update_states()
@@ -460,7 +453,6 @@ std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t 
 
 std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, std::optional<std::vector<Move>> constraints) {
     /*
-        TODO:
         Generate all the possible moves of this piece, go through
         the directions declared in PieceHandlers, check if the
         possible_move's coordinates are valid (check the Table::update_states()
@@ -471,9 +463,6 @@ std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x
         the vector (this means out initial piece can attack an enemy piece)
     */
 
-   	// for(auto move : constraints.value())
-	// 				printf("%hhd, %hhd\n", move.destination_idx->first, move.destination_idx->second);
-	// 			printf("\n\n");
    	std::vector<Move> moves;
 
     for(auto &[dx, dy] : PieceHandlers::queen_directions) {
@@ -513,7 +502,6 @@ std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x
 
 std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, uint8_t rocinfo, std::optional<std::vector<Move>> constraints) {
     /*
-        TODO:
         Generate all the possible moves of this piece, go through
         the directions declared in PieceHandlers, check if the
         possible_move's coordinates are valid (check the Table::update_states()

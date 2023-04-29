@@ -7,18 +7,10 @@
 
 #include <bits/stdc++.h>
 
-#include <iostream>
+const std::string Bot::BOT_NAME = "en-passant";
 
-extern std::ofstream *output;
-const std::string Bot::BOT_NAME = "en-passant"; /* Edit this, escaped characters are forbidden */
-void printTable(uint8_t table[8][8]);
-void printTableBits(uint8_t table[8][8]);
-
-extern FILE* f_out;
-
-Bot::Bot() { /* Initialize custom fields here */
+Bot::Bot() {
 }
-
 
 void Bot::recordMove(Move* move, PlaySide sideToMove) {
   Move::convertStrToIdx(*move);
@@ -30,7 +22,6 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   checkCastling(table, move, sideToMove);
   
   checkEnPassant(table, move, sideToMove);
-
 
   uint8_t moved_piece = PieceHandlers::createPiece(NAP, NONE);
 
@@ -50,9 +41,6 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
       Piece piece = PieceHandlers::getType(table.getPiece(move->destination_idx.value()));
 
       std::vector<std::pair<int8_t, int8_t>> &promotedPieces = (sideToMove == BLACK) ? table.promotedPawnsWhite : table.promotedPawnsBlack;
-      // fprintf(f_out, "size promoted %ld\n", promotedPieces.size());
-      // fprintf(f_out, "size promoted black %ld\n", table.promotedPawnsBlack.size());
-      // for (auto pos : table.promotedP
       for (unsigned long i = 0; i < promotedPieces.size(); i++) {
         if (promotedPieces[i] == move->destination_idx.value()) {
           piece = PAWN;
@@ -87,50 +75,27 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
     table.setPiece(move->destination_idx.value(), PieceHandlers::createPiece(move->getReplacement().value(), sideToMove));
     
   table.update_states();
-
   table.last_move = *move;
-  *output << (unsigned int)table.rocinfo << "\n";
-  printTable(table.table);
-  fprintf(f_out, "\n\n");
-
-  printPiecesAvailable(table);
-
-  fprintf(f_out, "promoted Pawns White\n");
-  for (auto piece : table.promotedPawnsWhite) {
-    fprintf(f_out, "%d %d\t", piece.first, piece.second);
-  }
-  fprintf(f_out, "\n\n");
-
 }
 
 Move Bot::calculateNextMove(PlaySide sideToMove) {
-  /* Play move for the side the engine is playing (Hint: Main.getEngineSide())
-   * Make sure to record your move in custom structures before returning.
-   *
-   * Return move that you are willing to submit
-   * Move is to be constructed via one of the factory methods declared in Move.h */
-
   std::vector<Move> allMoves;
   table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
 
+  // find if there is any castle move
   int idx = -1;
   for (unsigned long i = 0; i < allMoves.size(); i++)
   {
-    
-    // if (allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && 
-    //   PieceHandlers::getType(table.getPiece((allMoves[i].source_idx.value()))) == KING &&
-    //   abs(allMoves[i].source_idx.value().second - allMoves[i].destination_idx.value().second) == 2)
-    //   {
-    //     idx = i;
-    //     break;
-    //   }
-    if (!allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && allMoves[i].replacement.has_value()) {
-      idx = i;
-      break;
-    }
+    if (allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && 
+      PieceHandlers::getType(table.getPiece((allMoves[i].source_idx.value()))) == KING &&
+      abs(allMoves[i].source_idx.value().second - allMoves[i].destination_idx.value().second) == 2)
+      {
+        idx = i;
+        break;
+      }
   }
-
   if (idx == -1) {
+    // pick a random move from the moves available
     std::srand(std::time(NULL));
     int index = std::rand() % allMoves.size();
     Move::convertIdxToStr(allMoves[index]);
@@ -138,6 +103,7 @@ Move Bot::calculateNextMove(PlaySide sideToMove) {
 
     return allMoves[index];  
   } else {
+    // if there is a castle move available, use that one
     Move::convertIdxToStr(allMoves[idx]);
     recordMove(&allMoves[idx], sideToMove);
 
@@ -186,7 +152,6 @@ bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove)
       {
         table.addToCaptured(table, PieceHandlers::getType(table.getPiece(table.last_move.destination_idx.value())), sideToMove);
 
-        fprintf(f_out,"en passant\n");
         table.setPiece(table.last_move.destination_idx.value(), PieceHandlers::createPiece(NAP, NONE));
         return true;
       }
@@ -229,7 +194,6 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove)
 void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table) {
   // fprintf(f_out, "in checkPromotedPawns\n");
   if (move->source_idx.has_value() && move->destination_idx.has_value() && move->replacement.has_value()) {
-    fprintf(f_out, "promotionnnn\n");
     if (sideToMove == BLACK)
       table.promotedPawnsBlack.push_back(move->destination_idx.value());
     else
@@ -266,126 +230,4 @@ void checkImportantPiecesThatMoved(Move *move, Table &table) {
       table.pieceHasMoved(PieceHandlers::getColor(table.getPiece((move->source_idx.value()))) == WHITE ? 0b11101111 : 0b11111110 );
     }
   }
-}
-
-void printTable(uint8_t table[8][8]) {
-    for(int i = 0; i < 8; i++) {
-        for(int j = 0; j < 8; j++) {
-            switch (PieceHandlers::getType(table[i][j]) | PieceHandlers::getColor(table[i][j]))
-            {
-            case PAWN | WHITE:
-                fprintf(f_out, "wP\t");
-                break;
-            case KNIGHT | WHITE:
-                fprintf(f_out, "wN\t");
-                break;
-            case BISHOP | WHITE:
-                fprintf(f_out, "wB\t");
-                break;
-            case KING | WHITE:
-                fprintf(f_out, "wK\t");
-                break;
-            case QUEEN | WHITE:
-                fprintf(f_out, "wQ\t");
-                break;
-            case ROOK | WHITE:
-                fprintf(f_out,"wR\t");
-                break;
-            case PAWN | BLACK:
-                fprintf(f_out,"bP\t");
-                break;
-            case KNIGHT | BLACK:
-                fprintf(f_out,"bN\t");
-                break;
-            case BISHOP | BLACK:
-                fprintf(f_out,"bB\t");
-                break;
-            case KING | BLACK:
-                fprintf(f_out, "bK\t");
-                break;
-            case QUEEN | BLACK:
-                fprintf(f_out, "bQ\t");
-                break;
-            case ROOK | BLACK:
-                fprintf(f_out,"bR\t");
-                break;
-            default:
-                fprintf(f_out, "||\t");
-                break;
-            }
-        }
-        fprintf(f_out, "\n");
-    }
-}
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c %c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  ((byte) & 0x80 ? '1' : '0'), \
-  ((byte) & 0x40 ? '1' : '0'), \
-  ((byte) & 0x20 ? '1' : '0'), \
-  ((byte) & 0x10 ? '1' : '0'), \
-  ((byte) & 0x08 ? '1' : '0'), \
-  ((byte) & 0x04 ? '1' : '0'), \
-  ((byte) & 0x02 ? '1' : '0'), \
-  ((byte) & 0x01 ? '1' : '0') 
-
-void printTableBits(uint8_t table[8][8]) {
-    for(int i = 0; i < 8; i++) {
-        for(int j = 0; j < 8; j++) {
-            fprintf(f_out, BYTE_TO_BINARY_PATTERN "\t", BYTE_TO_BINARY(table[i][j]));
-        }
-        fprintf(f_out,"\n");
-    }
-}
-
-void printPiecesAvailable(Table &table) {
-
-  fprintf(f_out, "pieces available for WHITE\n");
-  for (auto piece : table.capturedByWhite) {
-    switch (piece) {
-      case PAWN:
-        fprintf(f_out, "PAWN ");
-        break;
-      case ROOK:
-        fprintf(f_out, "ROOK ");
-        break;
-      case KNIGHT:
-        fprintf(f_out, "KNIGHT ");
-        break;
-      case BISHOP:
-        fprintf(f_out, "BISHOP ");
-        break;
-      case QUEEN:
-        fprintf(f_out, "QUEEN ");
-        break;
-      default:
-        fprintf(f_out, "NAP?weird ");
-        break;
-    }
-  }  
-  fprintf(f_out, "\n\n");
-
-    fprintf(f_out, "pieces available for BLACK\n");
-  for (auto piece : table.capturedByBlack) {
-    switch (piece) {
-      case PAWN:
-        fprintf(f_out, "PAWN ");
-        break;
-      case ROOK:
-        fprintf(f_out, "ROOK ");
-        break;
-      case KNIGHT:
-        fprintf(f_out, "KNIGHT ");
-        break;
-      case BISHOP:
-        fprintf(f_out, "BISHOP ");
-        break;
-      case QUEEN:
-        fprintf(f_out, "QUEEN ");
-        break;
-      default:
-        fprintf(f_out, "NAP?weird ");
-        break;
-    }
-  }  
-  fprintf(f_out, "\n\n");
 }

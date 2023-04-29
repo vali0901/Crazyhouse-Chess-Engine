@@ -5,7 +5,7 @@
 #include "Piece.h"
 #include "PieceHandlers.h"
 #include "PlaySide.h"
-extern FILE* f_out;
+
 uint8_t Table::getPiece(int x, int y) {
 	return table[x][y];
 }
@@ -220,9 +220,6 @@ void Table::update_states() {
 }
 
 void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<Move> &moves) {
-	/*
-		TODO
-	*/
 	if(kingIsInCheck(turn)) {
 		std::vector<Move> helper;
 		if(turn == WHITE)

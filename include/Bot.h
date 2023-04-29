@@ -39,7 +39,6 @@ class Bot {
 
 bool checkCastling(Table &table, Move *move, PlaySide &sideToMove);
 bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove);
-void printPiecesAvailable(Table &table);
 void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table);
 void checkImportantPiecesThatMoved(Move *move, Table &table);
 #endif
