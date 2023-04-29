@@ -594,7 +594,7 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
         bool rocade_left = true;
         for(int8_t j = 1; j < y; j++)
             if(PieceHandlers::getType(table[x][j]) != NAP ||
-                !PieceHandlers::slotIsSafe(table[x][j], PieceHandlers::getColor(piececode)))
+                (!PieceHandlers::slotIsSafe(table[x][j], PieceHandlers::getColor(piececode)) && j != 1))
                 rocade_left = false;
 
         if(rocade_left)
