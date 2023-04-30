@@ -274,7 +274,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
         // if there is a pawn to my right or to my left, maybe we can do en-passant
         if(PieceHandlers::getType(table[x][y + dy]) == PAWN) //|| PieceHandlers::getType(table[x][y - 1]) == PAWN)
             // check if it is available for en-passant
-            if(last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
+            if(last_move.destination_idx.has_value() && last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
                 abs(last_move.destination_idx->first - last_move.source_idx->first) == 2)
                 possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));       
     }
@@ -302,7 +302,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
             // if there is a pawn to my right or to my left, maybe we can do en-passant
             if(PieceHandlers::getType(table[x][y + dy]) == PAWN) //|| PieceHandlers::getType(table[x][y - 1]) == PAWN)
                 // check if it is available for en-passant and if this is the attacker (his position must be in the contraints)
-                if(last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
+                if(last_move.destination_idx.has_value() && last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
                     last_move.source_idx.has_value() && 
                     abs(last_move.destination_idx->first - last_move.source_idx->first) == 2 &&
                     constraints.value()[0].destination_idx.value() == last_move.destination_idx.value())

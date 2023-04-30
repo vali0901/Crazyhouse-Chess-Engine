@@ -268,6 +268,11 @@ void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<
 
 Table::Table() {
 	memset(table, 0, 64);
+	last_move.source_idx = {};
+	last_move.destination_idx = {};
+
+	last_move.source_str = "";
+	last_move.destination_str = "";
 
 	rocinfo = 0b01110111;
 
