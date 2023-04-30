@@ -3,7 +3,7 @@
     {
       "name": "Nume arhiva",
       "setup": "",
-      "run": "unzip Etapa3.zip -d temp",
+      "run": "unzip Etapa1.zip -d temp",
       "input": "",
       "output": "",
       "comparison": "included",
