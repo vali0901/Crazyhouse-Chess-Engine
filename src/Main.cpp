@@ -12,27 +12,12 @@
 
 static PlaySide sideToMove;
 static PlaySide engineSide;
-std::ofstream *output;
-FILE *f_out;
 
 PlaySide getEngineSide()
 {
   return engineSide;
 }
 
-// old function (does not compile)
-
-// static void toggleSideToMove() {
-//     static const PlaySide switchTable[] = {
-//         [BLACK] = WHITE,
-//         [WHITE] = BLACK,
-//         [NONE] = NONE
-//     };
-
-//     sideToMove = switchTable[sideToMove];
-// }
-
-// new function
 PlaySide switchTable(PlaySide sideToMove)
 {
   switch (sideToMove) {
@@ -327,13 +312,10 @@ public:
     {
       getline(scanner, nextCmd);
     }
-    *output << nextCmd << std::endl;
 
     std::stringstream command_stream(nextCmd);
     std::string command;
     getline(command_stream, command, ' ');
-
-    *output << "command: " << command << std::endl;
 
     if (command == "quit")
     {
@@ -367,9 +349,6 @@ int main()
 {
   EngineComponents *engine = new EngineComponents();
   engine->performHandshake();
-  std::ofstream out("log");
-  output = &out;
-  f_out = fopen("log2", "w");
 
   while (true)
   {
