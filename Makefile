@@ -50,6 +50,6 @@ run: Main
 	./Main
 
 zip:
-	zip -r Etapa3.zip ./src ./build ./include Makefile
+	zip -r Etapa3.zip ./src ./build ./include Makefile README.md
 
 
