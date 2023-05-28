@@ -18,6 +18,7 @@ class PieceHandlers {
         static PlaySide getColor(uint8_t piececode);
         static void setAttackedBy(uint8_t &piececode, PlaySide attacker_color);
         static bool slotIsSafe(uint8_t slotcode, PlaySide mycolor);
+        static bool isAttackedBy(uint8_t piececode, PlaySide attacker);
         static bool isProtectorOfTheKing(uint8_t piececode, PlaySide protected_color);
         static bool isAttackerOfTheKing(uint8_t piececode, PlaySide attacked_color);
         static std::vector<Move> calculateMoves(uint8_t piececode, int8_t x, int8_t y, uint8_t table[8][8], Move last_move, uint8_t rocinfo, std::optional<std::vector<Move>> constraints);

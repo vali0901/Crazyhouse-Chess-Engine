@@ -52,6 +52,23 @@ void PieceHandlers::setAttackedBy(uint8_t &piececode, PlaySide attacker_color) {
     }
 }
 
+bool PieceHandlers::isAttackedBy(uint8_t piececode, PlaySide attacker) {
+    switch (attacker)
+    {
+    case WHITE:
+        return (piececode & ATTACKED_BY_WHITE) != 0;
+        break;
+    case BLACK:
+        return (piececode & ATTACKED_BY_BLACK) != 0;
+        break;
+    default:
+        printf("WTF!!! ATTACKER DOESN'T HAVE A COLOR, THIS SHOULDN'T HAPPEN!!!\n");
+        break;
+    }
+
+    return false;
+}
+
 bool PieceHandlers::slotIsSafe(uint8_t slotcode, PlaySide mycolor) {
     if(mycolor == WHITE)
         return (slotcode & ATTACKED_BY_BLACK) == 0;

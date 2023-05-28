@@ -12,6 +12,18 @@ class Bot {
   static const std::string BOT_NAME;
  public:
   /* Declare custom fields below */
+  static bool isCheckMate(Table table, PlaySide playside);
+  static bool isStaleMate(Table table, PlaySide playside);
+  static const std::map <Piece, int> piece_scores;
+  static const std::map<Piece, int> capt_piece_scores;
+  static const std::vector<float> placement;
+  static const int kingInCheck;
+  static const int winScore;
+  static const int drawScore;
+  static const float protectedPiece;
+  static const float attackedPiece;
+  static const float attackedNAP;
+  static const float attacker_buf;
   Table table;
   // PieceHandlers pieceHandler;
   /* Declare custom fields above */
