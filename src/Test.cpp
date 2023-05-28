@@ -170,7 +170,7 @@ void testTableStatsUpdater() {
 }
 
 void testMoveConvert() {
-    Move *move = Move::moveTo("a1", "a8");
+    Move *move = Move::moveTo("a6", "`5");
     Move::convertStrToIdx(*move);
     printf("Source (%hhd, %hhd)\nDestination (%hhd, %hhd)\n", move->source_idx->first, move->source_idx->second, move->destination_idx->first, move->destination_idx->second);
 
@@ -204,5 +204,6 @@ int main() {
     //testPieceHandler();
     //testTableStatsUpdater();
     //testMoveConvert();
-    testGenerateMoves();
+    // testGenerateMoves();
+    testMoveConvert();
 }
