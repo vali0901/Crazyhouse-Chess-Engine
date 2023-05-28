@@ -77,39 +77,79 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   table.update_states();
   table.last_move = *move;
 }
+int evaluate(Table &table, PlaySide sideToMove) {
+  return 0;
+}
+
+bool game_over(Table &table) {
+  return false;
+}
+
+PlaySide get_opponent(PlaySide player) {
+  return player;
+}
+#define INF (1 << 30)
+
+std::pair<int, Move> Bot::alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta) {
+    // STEP 1: game over or maximum recursion depth was reached
+    if (game_over(table) || depth == 0) {
+       Move dummy;
+       return std::pair(evaluate(table, sideToMove), dummy);
+    }
+ 
+    // STEP 2: generate all possible moves for player
+    // Note: sort moves descending by score (if possible) for maximizing the number of cut-off actions
+    // (or generete the moves already sorted by a custom criterion)
+    std::vector<Move> allMoves;
+    table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
+ 
+ 
+    // STEP 3: try to apply each move - compute best score
+    int best_score = -INF;
+    Move best_move;
+    for (auto move : allMoves) {
+        // STEP 3.1: do move
+        // TODO: make a deep copy of the table
+        recordMove(&move, sideToMove);
+ 
+        // STEP 3.2: play for the opponent
+        auto [score, _] = alphabeta_negamax(table, depth - 1, get_opponent(sideToMove), -beta, -alpha);
+        score = -score;
+        // opponent allows player to obtain this score if player will do current move.
+        // player chooses this move only if it has a better score.
+        if (score > best_score) {
+            best_score = score;
+            best_move = move;
+        }
+ 
+        // STEP 3.3: update alpha (found a better move?)
+        if (best_score > alpha) {
+            alpha = best_score;
+        }
+ 
+        // STEP 3.4: cut-off
+        // * already found the best possible score (alpha == beta)
+        // OR
+        // * on this branch we can obtain a score (alpha) better than the
+        // maximum allowed score by the opponent => drop the branch because
+        // opponent also plays optimal
+        if (alpha >= beta) {
+            break;
+        }
+ 
+        // STEP 3.4: undo move
+        // undo_move(state, move);
+    }
+ 
+    // STEP 4: return best allowed score
+    // [optional] also return the best move
+    return std::pair(best_score, best_move);
+}
 
 Move Bot::calculateNextMove(PlaySide sideToMove) {
   std::vector<Move> allMoves;
-  table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
-
-  // find if there is any castle move
-  int idx = -1;
-  for (unsigned long i = 0; i < allMoves.size(); i++)
-  {
-    if (allMoves[i].source_idx.has_value() && allMoves[i].destination_idx.has_value() && 
-      PieceHandlers::getType(table.getPiece((allMoves[i].source_idx.value()))) == KING &&
-      abs(allMoves[i].source_idx.value().second - allMoves[i].destination_idx.value().second) == 2)
-      {
-        idx = i;
-        break;
-      }
-  }
-  if (idx == -1) {
-    // pick a random move from the moves available
-    std::srand(std::time(NULL));
-    int index = std::rand() % allMoves.size();
-    Move::convertIdxToStr(allMoves[index]);
-    recordMove(&allMoves[index], sideToMove);
-
-    return allMoves[index];  
-  } else {
-    // if there is a castle move available, use that one
-    Move::convertIdxToStr(allMoves[idx]);
-    recordMove(&allMoves[idx], sideToMove);
-
-    return allMoves[idx];
-  }
-  
+  auto [_, move] = alphabeta_negamax(table, 5, sideToMove, -INF, INF);
+  return move;
 }
 
 std::string Bot::getBotName() { return Bot::BOT_NAME; }
