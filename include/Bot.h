@@ -12,8 +12,8 @@ class Bot {
   static const std::string BOT_NAME;
  public:
   /* Declare custom fields below */
-  static bool isCheckMate(Table table, PlaySide playside);
-  static bool isStaleMate(Table table, PlaySide playside);
+  static bool isCheckMate(Table table, PlaySide playside, std::vector<Move> poss_moves);
+  static bool isStaleMate(Table table, PlaySide playside, std::vector<Move> poss_moves);
   static const std::map <Piece, int> piece_scores;
   static const std::map<Piece, int> capt_piece_scores;
   static const std::vector<float> placement;

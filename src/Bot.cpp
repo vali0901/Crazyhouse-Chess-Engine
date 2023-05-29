@@ -94,16 +94,11 @@ PlaySide get_opponent(PlaySide player) {
   return WHITE;
 }
 
-bool Bot::isCheckMate(Table table, PlaySide playside) {
-  std::vector<Move> poss_moves;
-  table.generateAllPossibleMoves(playside, table.last_move, poss_moves);
+bool Bot::isCheckMate(Table table, PlaySide playside, std::vector<Move> poss_moves) {
   return poss_moves.size() == 0 && table.kingIsInCheck(playside);
-
 }
 
-bool Bot::isStaleMate(Table table, PlaySide playside) {
-  std::vector<Move> poss_moves;
-  table.generateAllPossibleMoves(playside, table.last_move, poss_moves);
+bool Bot::isStaleMate(Table table, PlaySide playside, std::vector<Move> poss_moves) {
   return poss_moves.size() == 0 && !table.kingIsInCheck(playside);
 }
 
@@ -114,11 +109,11 @@ int get_score_by_position(Piece piece, int x, int y) {
 int evaluate(Table &table, PlaySide sideToMove) {
   // check for checkmate and stalemate
   // need a new parameter, last_move;
-  if(Bot::isCheckMate(table, sideToMove))
-    return Bot::winScore;
+  // if(Bot::isCheckMate(table, sideToMove))
+  //   return Bot::winScore;
 
-  if(Bot::isStaleMate(table, sideToMove))
-    return Bot::drawScore;
+  // if(Bot::isStaleMate(table, sideToMove))
+  //   return Bot::drawScore;
   
   int score = 0;
   
@@ -193,25 +188,30 @@ int evaluate(Table &table, PlaySide sideToMove) {
   return score;
 }
 
-bool game_over(Table &table, PlaySide playside) {
-  return Bot::isStaleMate(table, playside) || Bot::isCheckMate(table, playside) ;
+bool game_over(Table &table, PlaySide playside, std::vector<Move> all_moves) {
+  return Bot::isStaleMate(table, playside, all_moves) || Bot::isCheckMate(table, playside, all_moves);
 }
 
 #define INF (1 << 30)
 
 std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta) {
     // STEP 1: game over or maximum recursion depth was reached
-    if (game_over(table, sideToMove) || depth == 0) {
-       Move dummy;
-       return std::pair(evaluate(table, sideToMove), dummy);
+    if(depth == 0) {
+      Move dummy;
+      return std::pair(evaluate(table, sideToMove), dummy);
     }
- 
+
     // STEP 2: generate all possible moves for player
     // Note: sort moves descending by score (if possible) for maximizing the number of cut-off actions
     // (or generete the moves already sorted by a custom criterion)
     std::vector<Move> allMoves;
     table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
- 
+
+    if (game_over(table, sideToMove, allMoves)) {
+       Move dummy;
+       return std::pair(evaluate(table, sideToMove), dummy);
+    }
+     
     // STEP 3: try to apply each move - compute best score
     int best_score = -INF;
     Move best_move = allMoves[0];
