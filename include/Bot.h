@@ -45,7 +45,7 @@ class Bot {
    * @return your move
    */
   Move calculateNextMove(PlaySide sideToMove);
-  std::pair<int, Move> alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta);
+  std::pair<int, Move> alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta);
   static std::string getBotName();
 };
 
@@ -53,5 +53,5 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove);
 bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove);
 void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table);
 void checkImportantPiecesThatMoved(Move *move, Table &table);
-std::pair<int, Move> alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta);
+std::pair<int, Move> alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta);
 #endif

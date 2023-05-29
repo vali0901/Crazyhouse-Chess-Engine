@@ -199,7 +199,7 @@ bool game_over(Table &table, PlaySide playside) {
 
 #define INF (1 << 30)
 
-std::pair<int, Move> Bot::alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta) {
+std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta) {
     // STEP 1: game over or maximum recursion depth was reached
     if (game_over(table, sideToMove) || depth == 0) {
        Move dummy;
@@ -212,17 +212,17 @@ std::pair<int, Move> Bot::alphabeta_negamax(Table &table, int depth, PlaySide si
     std::vector<Move> allMoves;
     table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
  
- 
     // STEP 3: try to apply each move - compute best score
     int best_score = -INF;
-    Move best_move;
+    Move best_move = allMoves[0];
+    Table ogTable = table;
     for (auto move : allMoves) {
         // STEP 3.1: do move
-        // TODO: make a deep copy of the table
+        table = ogTable;
         recordMove(&move, sideToMove);
  
         // STEP 3.2: play for the opponent
-        auto [score, _] = alphabeta_negamax(table, depth - 1, get_opponent(sideToMove), -beta, -alpha);
+        auto [score, _] = alphabeta_negamax(depth - 1, get_opponent(sideToMove), -beta, -alpha);
         score = -score;
         // opponent allows player to obtain this score if player will do current move.
         // player chooses this move only if it has a better score.
@@ -243,11 +243,12 @@ std::pair<int, Move> Bot::alphabeta_negamax(Table &table, int depth, PlaySide si
         // maximum allowed score by the opponent => drop the branch because
         // opponent also plays optimal
         if (alpha >= beta) {
+            table = ogTable;
             break;
         }
  
         // STEP 3.4: undo move
-        // undo_move(state, move);
+        table = ogTable;
     }
  
     // STEP 4: return best allowed score
@@ -256,8 +257,9 @@ std::pair<int, Move> Bot::alphabeta_negamax(Table &table, int depth, PlaySide si
 }
 
 Move Bot::calculateNextMove(PlaySide sideToMove) {
-  std::vector<Move> allMoves;
-  auto [_, move] = alphabeta_negamax(table, 5, sideToMove, -INF, INF);
+  auto [_, move] = alphabeta_negamax(3, sideToMove, -INF, INF);
+  Move::convertIdxToStr(move);
+  recordMove(&move, sideToMove);
   return move;
 }
 
@@ -359,7 +361,7 @@ void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table) {
 }
 
 void checkImportantPiecesThatMoved(Move *move, Table &table) {
-   if (!move->isDropIn()) {
+   if (move->source_idx.has_value() && move->destination_idx.has_value()) {
     if(PieceHandlers::getType(table.getPiece(move->source_idx.value())) == KING) {
     if(PieceHandlers::getColor(table.getPiece(move->source_idx.value())) == WHITE) {
       table.wKx = move->destination_idx->first;

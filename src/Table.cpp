@@ -266,6 +266,26 @@ void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<
 	}
 }
 
+Table::Table(Table &t)
+{
+	this->bKx = t.bKx;
+	this->bKy = t.bKy;
+	this->capturedByBlack = t.capturedByBlack;
+	this->capturedByWhite = t.capturedByWhite;
+	this->last_move = t.last_move;
+	this->promotedPawnsBlack = t.promotedPawnsBlack;
+	this->promotedPawnsWhite = t.promotedPawnsWhite;
+	this->rocinfo = t.rocinfo;
+	this->wKx = t.wKx;
+	this->wKy = t.wKy;
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			this->table[i][j] = t.table[i][j];
+		}
+	}
+}
+
 Table::Table() {
 	memset(table, 0, 64);
 	last_move.source_idx = {};
