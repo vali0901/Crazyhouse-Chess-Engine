@@ -8,7 +8,17 @@
 #include <bits/stdc++.h>
 
 const std::string Bot::BOT_NAME = "en-passant";
+const std::map<Piece, int> Bot::piece_scores = {{NAP, 50}, {PAWN, 100}, {KNIGHT, 500}, {BISHOP, 600},{ROOK, 700}, {QUEEN, 1000}, {KING, 0}};
+const std::map<Piece, int> Bot::capt_piece_scores = {{NAP, 0},{PAWN, 10}, {KNIGHT, 200}, {BISHOP, 200},{ROOK, 200}, {QUEEN, 700}, {KING, 0}};
+const std::vector<float> Bot::placement = {1, 1.25, 1.75, 2.0, 2.0, 1.75, 1.25, 1};
 
+const int Bot::winScore = INT_MAX;
+const int Bot::drawScore = 2500;
+const float Bot::protectedPiece = 1.5;
+const float Bot::attackedPiece = 1.25;
+const float Bot::attackedNAP = 1.5;
+const int Bot::kingInCheck = 5000;
+const float Bot::attacker_buf = 0.5; 
 Bot::Bot() {
 }
 
@@ -77,22 +87,121 @@ void Bot::recordMove(Move* move, PlaySide sideToMove) {
   table.update_states();
   table.last_move = *move;
 }
-int evaluate(Table &table, PlaySide sideToMove) {
-  return 0;
-}
-
-bool game_over(Table &table) {
-  return false;
-}
 
 PlaySide get_opponent(PlaySide player) {
-  return player;
+  if(player == WHITE)
+    return BLACK;
+  return WHITE;
 }
+
+bool Bot::isCheckMate(Table table, PlaySide playside) {
+  std::vector<Move> poss_moves;
+  table.generateAllPossibleMoves(playside, table.last_move, poss_moves);
+  return poss_moves.size() == 0 && table.kingIsInCheck(playside);
+
+}
+
+bool Bot::isStaleMate(Table table, PlaySide playside) {
+  std::vector<Move> poss_moves;
+  table.generateAllPossibleMoves(playside, table.last_move, poss_moves);
+  return poss_moves.size() == 0 && !table.kingIsInCheck(playside);
+}
+
+int get_score_by_position(Piece piece, int x, int y) {
+  return (int)(Bot::placement[x] * Bot::placement[y] * Bot::piece_scores.at(piece));
+}
+
+int evaluate(Table &table, PlaySide sideToMove) {
+  // check for checkmate and stalemate
+  // need a new parameter, last_move;
+  if(Bot::isCheckMate(table, sideToMove))
+    return Bot::winScore;
+
+  if(Bot::isStaleMate(table, sideToMove))
+    return Bot::drawScore;
+  
+  int score = 0;
+  
+  for(int i = 0; i < 8; i++) {
+    for(int j = 0; j < 8; j++) {
+      // procces slots attacked by me
+      if(PieceHandlers::isAttackedBy(table.table[i][j], sideToMove)) {
+          // enemy's king is in check
+          if(PieceHandlers::getType(table.table[i][j]) == KING
+            && PieceHandlers::getColor(table.table[i][j] != sideToMove))
+            score += Bot::kingInCheck;
+          // enemy's atacked piece
+          else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] != sideToMove))
+            score += Bot::attackedPiece * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+          // friendly protected piece
+          else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] == sideToMove))
+            score += Bot::protectedPiece * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+          // empty slot, attacked by me
+          else if(PieceHandlers::getType(table.table[i][j]) == NAP)
+            score += Bot::attackedNAP * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+      // process slots attacked by enemy
+      } else if(PieceHandlers::isAttackedBy(table.table[i][j], get_opponent(sideToMove))) {
+        // my king is in check
+        if(PieceHandlers::getType(table.table[i][j]) == KING
+            && PieceHandlers::getColor(table.table[i][j] == sideToMove))
+            score -= (int)(Bot::attacker_buf * Bot::kingInCheck);
+          // my atacked piece
+          else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] == sideToMove))
+            score -= (int)(Bot::attacker_buf * Bot::attackedPiece * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j));
+          // enemy protected piece (maybe we change this a lil' bit)
+          else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] == sideToMove))
+            score -= (int)(Bot::attacker_buf * Bot::protectedPiece * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j));
+          // empty slot, attacked by me
+          else if(PieceHandlers::getType(table.table[i][j]) == NAP)
+            score -= (int)(Bot::attacker_buf * Bot::attackedNAP * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j));
+      // process not attacked/ protected pieces
+      } else {
+        // my piece
+        if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] == sideToMove))
+            score += get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+        // enemy's piece
+        else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] != sideToMove))
+            score -= (int)(Bot::attacker_buf * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j));
+        // not interested in NAP slots
+      }
+    }
+  }
+
+  // calculate captured pieces score
+  int cscore1 = 0, cscore2 = 0;
+
+  for(auto piece : table.capturedByWhite)
+    cscore1 += Bot::capt_piece_scores.at(piece);
+
+  for(auto piece : table.capturedByBlack)
+    cscore2 += Bot::capt_piece_scores.at(piece);
+
+  if(sideToMove == WHITE) {
+    score += cscore1;
+    score -= (int)(Bot::attacker_buf * cscore2);
+  } else {
+    score += cscore2;
+    score -= (int)(Bot::attacker_buf * cscore1);
+  }
+
+  return score;
+}
+
+bool game_over(Table &table, PlaySide playside) {
+  return Bot::isStaleMate(table, playside) || Bot::isCheckMate(table, playside) ;
+}
+
 #define INF (1 << 30)
 
 std::pair<int, Move> Bot::alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta) {
     // STEP 1: game over or maximum recursion depth was reached
-    if (game_over(table) || depth == 0) {
+    if (game_over(table, sideToMove) || depth == 0) {
        Move dummy;
        return std::pair(evaluate(table, sideToMove), dummy);
     }
