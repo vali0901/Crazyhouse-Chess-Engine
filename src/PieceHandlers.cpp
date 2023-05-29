@@ -129,7 +129,7 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
         x += dx;
         y += dy;
 
-        constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(x, y)));
+        constraints.push_back(Move::moveTo(std::pair(0, 0), std::pair(x, y)));
 
     } while (PieceHandlers::getType(table[x][y]) == NAP);
 
@@ -141,7 +141,7 @@ std::vector<Move> PieceHandlers::calculateProtectorOfTheKingMoves(uint8_t piecec
     y = init_y + dy;
 
     while (PieceHandlers::getType(table[x][y]) == NAP) {
-        constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(x, y)));
+        constraints.push_back(Move::moveTo(std::pair(0, 0), std::pair(x, y)));
 
         x += dx;
         y += dy;
@@ -173,7 +173,7 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
     switch (PieceHandlers::getType(attackercode))
     {
     case PAWN: case KNIGHT:  // we can not drop in
-        constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(attx, atty)));
+        constraints.push_back(Move::moveTo(std::pair(0, 0), std::pair(attx, atty)));
         break;
     case BISHOP: case ROOK: case QUEEN: // we can drop in on empty slots between the attacker and king
         dx = (attx - kx < 0) ? -1 : (attx - kx == 0) ? 0 : 1;
@@ -192,15 +192,15 @@ std::vector<Move> PieceHandlers::calculateKingInCheckMoves(uint8_t kingcode, int
                     if(piece == PAWN && (x == 0 || x == 7))
                         continue;
                         
-                    moves.push_back(*Move::dropIn(std::pair(x, y), piece));
+                    moves.push_back(Move::dropIn(std::pair(x, y), piece));
                 }
 
-            constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(x, y)));
+            constraints.push_back(Move::moveTo(std::pair(0, 0), std::pair(x, y)));
         } while (PieceHandlers::getType(table[x][y]) == NAP);
 
         // constraint for king, he is not allowed to move on the direction of
         // the attack
-        king_constraints.push_back(*Move::moveTo(std::pair(0, 0), std::pair(kx - dx, ky - dy)));
+        king_constraints.push_back(Move::moveTo(std::pair(0, 0), std::pair(kx - dx, ky - dy)));
 
         break;    
     case KING:
@@ -254,20 +254,20 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
         // reached the end of the table, promotion
         if(x + dx == 0 || x + dx == 7) {
             // add promotion move
-            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), QUEEN));
-            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), ROOK));
-            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), KNIGHT));
-            possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y), BISHOP));
+            possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y), QUEEN));
+            possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y), ROOK));
+            possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y), KNIGHT));
+            possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y), BISHOP));
 
         } else {
-            possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y)));
+            possible_moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y)));
         }
 
         // if the pawn hasn't moved yet, it can move two slots (if that slot is empty)
         if(PieceHandlers::getType(table[x + dx + dx][y]) == NAP &&
             ((PieceHandlers::getColor(piececode) == BLACK && x == 1) ||
             	(PieceHandlers::getColor(piececode) == WHITE && x == 6))) {
-                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx + dx, y)));
+                possible_moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx + dx, y)));
             }
     }
 
@@ -279,12 +279,12 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
             PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode)) {
                 if(x + dx == 0 || x + dx == 7) {
                     // add promotion move
-                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), QUEEN));
-                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), ROOK));
-                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), KNIGHT));
-                    possible_moves.push_back(*Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), BISHOP));
+                    possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), QUEEN));
+                    possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), ROOK));
+                    possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), KNIGHT));
+                    possible_moves.push_back(Move::promote(std::pair(x, y), std::pair(x + dx, y + dy), BISHOP));
                 } else {
-                    possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+                    possible_moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
                 }
         }
 
@@ -293,7 +293,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
             // check if it is available for en-passant
             if(last_move.destination_idx.has_value() && last_move.destination_idx.value() == std::pair(x, (int8_t)(y + dy)) &&
                 abs(last_move.destination_idx->first - last_move.source_idx->first) == 2)
-                possible_moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));       
+                possible_moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));       
     }
 
     // filter through constraints
@@ -323,7 +323,7 @@ std::vector<Move> PieceHandlers::calculatePawnMoves(uint8_t piececode, int8_t x,
                     last_move.source_idx.has_value() && 
                     abs(last_move.destination_idx->first - last_move.source_idx->first) == 2 &&
                     constraints.value()[0].destination_idx.value() == last_move.destination_idx.value())
-                    moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+                    moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
         }
 
     return moves;
@@ -353,13 +353,13 @@ std::vector<Move> PieceHandlers::calculateKnightMoves(uint8_t piececode, int8_t 
 				PieceHandlers::getType(table[x + dx][y + dy]) != KING &&
 				PieceHandlers::getColor(table[x + dx][y + dy]) != PieceHandlers::getColor(piececode))) {
 			if(!constraints.has_value())
-				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+				moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
 			else
 				// check if this current move is in contstraints, if it is, it's legal
 				for(auto move : constraints.value()) {
 					//printf("%hhd, %hhd\n", move.destination_idx->first, move.destination_idx->second);
 					if(move.destination_idx.value() == std::pair((int8_t)(x + dx), (int8_t)(y + dy))) {
-                    	moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+                    	moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
 						break;
 					}
 				}
@@ -398,12 +398,12 @@ std::vector<Move> PieceHandlers::calculateRookMoves(uint8_t piececode, int8_t x,
 			
 			// otherwise add the move
 			if(!constraints.has_value())
-				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+				moves.push_back(Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
 			else
 				// check if this current move is in contstraints, if it is, it's legal
 				for(auto move : constraints.value())
 					if(move.destination_idx.value() == std::pair((int8_t)(currx), (int8_t)(curry))) {
-                    	moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+                    	moves.push_back(Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
 						break;
 					}
 
@@ -447,12 +447,12 @@ std::vector<Move> PieceHandlers::calculateBishopMoves(uint8_t piececode, int8_t 
 			
 			// otherwise add the move
 			if(!constraints.has_value())
-				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+				moves.push_back(Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
 			else
 				// check if this current move is in contstraints, if it is, it's legal
 				for(auto move : constraints.value())
 					if(move.destination_idx.value() == std::pair((int8_t)(currx), (int8_t)(curry))) {
-                    	moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+                    	moves.push_back(Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
 						break;
 					}
 			
@@ -496,12 +496,12 @@ std::vector<Move> PieceHandlers::calculateQueenMoves(uint8_t piececode, int8_t x
 			
 			// otherwise add the move
 			if(!constraints.has_value())
-				moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+				moves.push_back(Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
 			else
 				// check if this current move is in contstraints, if it is, it's legal
 				for(auto move : constraints.value())
 					if(move.destination_idx.value() == std::pair((int8_t)(currx), (int8_t)(curry))) {
-						moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
+						moves.push_back(Move::moveTo(std::pair(x, y), std::pair(currx, curry)));
 						break;
 					}
 
@@ -561,7 +561,7 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
                     move_allowed = false;
 
         if(move_allowed)
-            moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
+            moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x + dx, y + dy)));
 
     }
 
@@ -591,7 +591,7 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
                 rocade_right = false;
 
         if(rocade_right)
-            moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x, y + 2)));        
+            moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x, y + 2)));        
     }
 
     // rocade right
@@ -603,7 +603,7 @@ std::vector<Move> PieceHandlers::calculateKingMoves(uint8_t piececode, int8_t x,
                 rocade_left = false;
 
         if(rocade_left)
-            moves.push_back(*Move::moveTo(std::pair(x, y), std::pair(x, y - 2)));        
+            moves.push_back(Move::moveTo(std::pair(x, y), std::pair(x, y - 2)));        
     }
 
     return moves;

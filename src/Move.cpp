@@ -66,41 +66,41 @@ bool Move::isDropIn()
          this->replacement.has_value();
 }
 
-Move *Move::moveTo(std::optional<std::string> source,
+Move Move::moveTo(std::optional<std::string> source,
                    std::optional<std::string> destination)
 {
-  return new Move(source, destination, {});
+  return Move(source, destination, {});
 }
 
-Move *Move::moveTo(std::optional<std::pair<int8_t, int8_t>> source,
+Move Move::moveTo(std::optional<std::pair<int8_t, int8_t>> source,
                    std::optional<std::pair<int8_t, int8_t>> destination) {
-  return new Move(source, destination, {});
+  return Move(source, destination, {});
 }
 
-Move *Move::promote(std::optional<std::string> source,
+Move Move::promote(std::optional<std::string> source,
                     std::optional<std::string> destination,
                     std::optional<Piece> replacement)
 {
-  return new Move(source, destination, replacement);
+  return Move(source, destination, replacement);
 }
 
-Move *Move::promote(std::optional<std::pair<int8_t, int8_t>> source,
+Move Move::promote(std::optional<std::pair<int8_t, int8_t>> source,
                     std::optional<std::pair<int8_t, int8_t>> destination,
                     std::optional<Piece> replacement)
 {
-  return new Move(source, destination, replacement);
+  return Move(source, destination, replacement);
 }
 
-Move *Move::dropIn(std::optional<std::string> destination,
+Move Move::dropIn(std::optional<std::string> destination,
                    std::optional<Piece> replacement)
 {
-  return new Move({}, destination, replacement);
+  return Move({}, destination, replacement);
 }
 
-Move *Move::dropIn(std::optional<std::pair<int8_t, int8_t>> destination,
+Move Move::dropIn(std::optional<std::pair<int8_t, int8_t>> destination,
                    std::optional<Piece> replacement)
 {
-  return new Move({}, destination, replacement);
+  return Move({}, destination, replacement);
 }
 
-Move *Move::resign() { return new Move("", "", {}); }
+Move Move::resign() { return Move("", "", {}); }

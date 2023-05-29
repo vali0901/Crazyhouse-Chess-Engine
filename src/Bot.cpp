@@ -4,6 +4,7 @@
 #include "Main.h"
 #include "Piece.h"
 #include "PieceHandlers.h"
+#include <malloc.h>
 
 #include <bits/stdc++.h>
 
@@ -201,6 +202,8 @@ std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int 
       return std::pair(evaluate(table, sideToMove), dummy);
     }
 
+    malloc_stats();
+    std::cout.flush();
     // STEP 2: generate all possible moves for player
     // Note: sort moves descending by score (if possible) for maximizing the number of cut-off actions
     // (or generete the moves already sorted by a custom criterion)
