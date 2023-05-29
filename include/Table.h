@@ -13,6 +13,7 @@ class Table {
  public:
 	Table();
 	// contructor of a table with a random layout
+	Table(Table &t);
 	Table(int random);
 	Table(int custom, int youchoose);
   	uint8_t getPiece(int x, int y);

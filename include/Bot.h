@@ -12,8 +12,8 @@ class Bot {
   static const std::string BOT_NAME;
  public:
   /* Declare custom fields below */
-  static bool isCheckMate(Table table, PlaySide playside);
-  static bool isStaleMate(Table table, PlaySide playside);
+  static bool isCheckMate(Table table, PlaySide playside, std::vector<Move> poss_moves);
+  static bool isStaleMate(Table table, PlaySide playside, std::vector<Move> poss_moves);
   static const std::map <Piece, int> piece_scores;
   static const std::map<Piece, int> capt_piece_scores;
   static const std::vector<float> placement;
@@ -45,7 +45,7 @@ class Bot {
    * @return your move
    */
   Move calculateNextMove(PlaySide sideToMove);
-  std::pair<int, Move> alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta);
+  std::pair<int, Move> alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta);
   static std::string getBotName();
 };
 
@@ -53,5 +53,5 @@ bool checkCastling(Table &table, Move *move, PlaySide &sideToMove);
 bool checkEnPassant(Table &table, Move *move, PlaySide &sideToMove);
 void checkPromotedPawns(Move *move, PlaySide sideToMove, Table &table);
 void checkImportantPiecesThatMoved(Move *move, Table &table);
-std::pair<int, Move> alphabeta_negamax(Table &table, int depth, PlaySide sideToMove, int alpha, int beta);
+std::pair<int, Move> alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta);
 #endif
