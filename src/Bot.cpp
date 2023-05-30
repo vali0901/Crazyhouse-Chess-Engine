@@ -5,22 +5,126 @@
 #include "Piece.h"
 #include "PieceHandlers.h"
 #include <malloc.h>
+#include <boost/functional/hash.hpp>
 
 #include <bits/stdc++.h>
 
 const std::string Bot::BOT_NAME = "en-passant";
 const std::map<Piece, int> Bot::piece_scores = {{NAP, 50}, {PAWN, 100}, {KNIGHT, 500}, {BISHOP, 600},{ROOK, 700}, {QUEEN, 1000}, {KING, 0}};
 const std::map<Piece, int> Bot::capt_piece_scores = {{NAP, 0},{PAWN, 10}, {KNIGHT, 200}, {BISHOP, 200},{ROOK, 200}, {QUEEN, 700}, {KING, 0}};
-const std::vector<float> Bot::placement = {1, 1.25, 1.75, 2.0, 2.0, 1.75, 1.25, 1};
+const std::vector<float> Bot::placement = {1, 1.1, 1.3, 1.5, 1.5, 1.3, 1.1, 1};
+
+int a;
+int b;
+
+const int Bot::maxLenHT = (1 << 29);
+const Bot::KeyHasher Bot::keyHasher;
+std::vector<int> Bot::tablescoreHT;
 
 const int Bot::winScore = INT_MAX;
 const int Bot::drawScore = 2500;
-const float Bot::protectedPiece = 1.5;
+const float Bot::protectedPiece = 1.75;
 const float Bot::attackedPiece = 1.25;
+const float Bot::protected_attackedPiece = 0.8;
 const float Bot::attackedNAP = 1.5;
-const int Bot::kingInCheck = 5000;
-const float Bot::attacker_buf = 0.5; 
+const int Bot::kingInCheck = 500;
+const float Bot::attacker_buf = 0.75; 
+
+std::size_t  Bot :: KeyHasher :: operator()(const Piece& k) const {
+      using boost::hash_value;
+      using boost::hash_combine;
+
+      std::size_t seed = 0;
+
+      hash_combine(seed,hash_value((size_t) k));
+      
+      return seed;
+}
+
+std::size_t  Bot :: KeyHasher :: operator()(const Move& k, Piece *src, Piece *dest) const {
+      using boost::hash_value;
+      using boost::hash_combine;
+
+      std::size_t seed = 0;
+
+      hash_combine(seed, this->operator()(k));
+      if(src != NULL)
+        hash_combine(seed, this->operator()(*src));
+      if(dest != NULL)
+        hash_combine(seed, this->operator()(*dest));
+      
+      return seed;
+}
+
+std::size_t  Bot :: KeyHasher :: operator()(const Move& k) const {
+      using boost::hash_value;
+      using boost::hash_combine;
+
+      std::size_t seed = 0;
+
+      if(k.source_idx.has_value())
+        hash_combine(seed, hash_value(k.source_idx.value()));
+      if(k.destination_idx.has_value())
+        hash_combine(seed, hash_value(k.destination_idx.value()));
+      if(k.replacement.has_value())
+        hash_combine(seed, this->operator()(k.replacement.value()));
+      
+      return seed;
+}  
+
+std::size_t  Bot :: KeyHasher :: operator()(const std::vector<Move> &k) const {
+      using boost::hash_value;
+      using boost::hash_combine;
+
+      std::size_t seed = 0;
+
+      for(auto move : k) {
+        hash_combine(seed, this->operator()(move));
+      }
+      hash_combine(seed,hash_value(k.size()));
+      
+      return seed;
+}
+
+std::size_t  Bot :: KeyHasher :: operator()(const Table &k) const {
+      using boost::hash_value;
+      using boost::hash_combine;
+
+      std::size_t seed = 0;
+
+      // combine rows
+      // other idea : combine all rows using xor and then use that value
+      for(int i = 0; i < 8; i++) {
+        std::size_t row;
+        memcpy(&row, k.table[i], 8);
+        hash_combine(seed, row);
+      }
+
+      hash_combine(seed, this->operator()(k.last_move));
+      hash_combine(seed, k.rocinfo);
+      hash_combine(seed, std::pair<std::pair<int8_t, int8_t>,std::pair<int8_t, int8_t>>({k.wKx, k.wKy}, {k.bKx, k.bKy}));
+
+      for(auto p : k.capturedByWhite) {
+        hash_combine(seed, this->operator()(p));
+      }
+
+      for(auto p : k.capturedByBlack) {
+        hash_combine(seed, this->operator()(p));
+      }
+
+      for(auto whatever : k.promotedPawnsWhite) {
+        hash_combine(seed, hash_value(whatever));
+      }
+
+      for(auto whatever : k.capturedByBlack) {
+        hash_combine(seed, hash_value(whatever));
+      }
+      
+      return seed;
+}
+
 Bot::Bot() {
+  tablescoreHT = std::vector<int>(Bot::maxLenHT, INT_MIN);
 }
 
 void Bot::recordMove(Move* move, PlaySide sideToMove) {
@@ -116,12 +220,38 @@ int evaluate(Table &table, PlaySide sideToMove) {
   // if(Bot::isStaleMate(table, sideToMove))
   //   return Bot::drawScore;
   
+  // size_t hash = Bot::keyHasher(table) % Bot :: maxLenHT;
+
+  // // search in HT;
+  // if(Bot:: tablescoreHT[hash] != INT_MIN) {
+  //   a++;
+  //   return Bot:: tablescoreHT[hash];
+  // }
+
   int score = 0;
   
   for(int i = 0; i < 8; i++) {
     for(int j = 0; j < 8; j++) {
+      // process both attacked and protected slots
+      if(PieceHandlers::isAttackedBy(table.table[i][j], sideToMove) && PieceHandlers::isAttackedBy(table.table[i][j], get_opponent(sideToMove))) {
+          // enemy's king is in check
+          if(PieceHandlers::getType(table.table[i][j]) == KING
+            && PieceHandlers::getColor(table.table[i][j] != sideToMove))
+            score += Bot::kingInCheck;
+          // enemy's piece
+          else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] != sideToMove))
+            score += Bot::attacker_buf * Bot::protected_attackedPiece * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+          // friendly piece
+          else if(PieceHandlers::getType(table.table[i][j]) != NAP
+            && PieceHandlers::getColor(table.table[i][j] == sideToMove))
+            score += Bot::protected_attackedPiece * get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+          // empty slot, attacked by both
+          else if(PieceHandlers::getType(table.table[i][j]) == NAP)
+            score += get_score_by_position(PieceHandlers::getType(table.table[i][j]), i, j);
+      
       // procces slots attacked by me
-      if(PieceHandlers::isAttackedBy(table.table[i][j], sideToMove)) {
+      } if(PieceHandlers::isAttackedBy(table.table[i][j], sideToMove)) {
           // enemy's king is in check
           if(PieceHandlers::getType(table.table[i][j]) == KING
             && PieceHandlers::getColor(table.table[i][j] != sideToMove))
@@ -186,6 +316,9 @@ int evaluate(Table &table, PlaySide sideToMove) {
     score -= (int)(Bot::attacker_buf * cscore1);
   }
 
+  // // save in HT
+  // Bot::tablescoreHT[hash] = score;
+  // b++;
   return score;
 }
 
@@ -195,15 +328,69 @@ bool game_over(Table &table, PlaySide playside, std::vector<Move> all_moves) {
 
 #define INF (1 << 30)
 
+int evalMove(Table &t, Move &m1, PlaySide myside) {
+  int score1 = 0;
+  uint8_t dest_piece = t.table[m1.destination_idx->first][m1.destination_idx->second];
+  if(m1.isDropIn()) {
+    // std::cout << (int)m1.replacement.value() << " dropIN\n";
+    // std::cout.flush();
+    int basic_piece_score = get_score_by_position(m1.replacement.value(), m1.destination_idx->first, m1.destination_idx->second);
+    // std::cout << "dropIN ok\n";
+    // std::cout.flush();
+    if(PieceHandlers::isAttackedBy(dest_piece, myside) && PieceHandlers::isAttackedBy(dest_piece, get_opponent(myside)))
+      score1 = basic_piece_score * Bot::protected_attackedPiece;
+    else if(PieceHandlers::isAttackedBy(dest_piece, myside))
+      score1 = basic_piece_score * Bot::protectedPiece;
+    else if(PieceHandlers::isAttackedBy(dest_piece, get_opponent(myside)))
+      score1 = basic_piece_score / 2;
+    return score1;
+  } else if(m1.isPromotion()) {
+    // std::cout << (int)m1.replacement.value() << " promotion\n";
+    // std::cout.flush();
+    int basic_piece_score = Bot::piece_scores.at(m1.replacement.value());
+    // std::cout << "promotionOK\n";
+    // std::cout.flush();
+    if(PieceHandlers::isAttackedBy(dest_piece, myside) && PieceHandlers::isAttackedBy(dest_piece, get_opponent(myside)))
+      score1 = basic_piece_score * Bot::protected_attackedPiece;
+    else if(PieceHandlers::isAttackedBy(dest_piece, myside))
+      score1 = basic_piece_score * Bot::protectedPiece;
+    else if(PieceHandlers::isAttackedBy(dest_piece, get_opponent(myside)))
+      score1 = basic_piece_score / 2;
+    return score1;
+  } else {
+    uint8_t sourc_piece = t.table[m1.source_idx->first][m1.source_idx->second];
+    // std::cout << (int)sourc_piece << " Normal\n";
+    // std::cout.flush();
+    int basic_piece_score = get_score_by_position(PieceHandlers::getType(sourc_piece), m1.destination_idx->first, m1.destination_idx->second);
+    // std::cout << "NormalOK\n";
+    // std::cout.flush();
+    if(PieceHandlers::isAttackedBy(dest_piece, myside) && PieceHandlers::isAttackedBy(dest_piece, get_opponent(myside)))
+      score1 = basic_piece_score * Bot::protected_attackedPiece;
+    else if(PieceHandlers::isAttackedBy(dest_piece, myside))
+      score1 = basic_piece_score * Bot::protectedPiece;
+    else if(PieceHandlers::isAttackedBy(dest_piece, get_opponent(myside)))
+      score1 = basic_piece_score * 2;
+
+    // capture move
+    if(PieceHandlers::getType(dest_piece) != NAP)
+      score1 += get_score_by_position(PieceHandlers::getType(dest_piece), m1.destination_idx->first, m1.destination_idx->second);
+    
+    return score1;
+  }
+
+  return 0;
+}
+
 std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta) {
     // STEP 1: game over or maximum recursion depth was reached
+    
     if(depth == 0) {
       Move dummy;
       return std::pair(evaluate(table, sideToMove), dummy);
     }
 
-    malloc_stats();
-    std::cout.flush();
+    // malloc_stats();
+    // std::cout.flush();
     // STEP 2: generate all possible moves for player
     // Note: sort moves descending by score (if possible) for maximizing the number of cut-off actions
     // (or generete the moves already sorted by a custom criterion)
@@ -214,6 +401,16 @@ std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int 
        Move dummy;
        return std::pair(evaluate(table, sideToMove), dummy);
     }
+
+    // std::cout << depth << " ceplm1 " << allMoves.size() << "\n";
+    // std::cout.flush();
+    // std::sort(allMoves.begin(), allMoves.end(), [&t = table, s = sideToMove](Move &m1, Move &m2) {
+    //   return evalMove(t, m1, s) > evalMove(t, m2, s);
+    // });
+
+    // std::cout << "ceplm2\n";
+    // std::cout.flush();
+
      
     // STEP 3: try to apply each move - compute best score
     int best_score = -INF;
@@ -260,9 +457,11 @@ std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int 
 }
 
 Move Bot::calculateNextMove(PlaySide sideToMove) {
-  auto [_, move] = alphabeta_negamax(3, sideToMove, -INF, INF);
+  auto [_, move] = alphabeta_negamax(4, sideToMove, -INF, INF);
   Move::convertIdxToStr(move);
   recordMove(&move, sideToMove);
+  // std::cout << a << " " << b << "\n";
+  // std::cout.flush();
   return move;
 }
 

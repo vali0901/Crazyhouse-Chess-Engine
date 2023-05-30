@@ -1,4 +1,4 @@
-CXXFLAGS = -g -Wall -Werror -std=c++17 -Iinclude
+CXXFLAGS = -g -Wall -Werror -std=c++17 -Iinclude -O4
 LDLIBS =
 
 SRCDIR := ./src

@@ -50,20 +50,20 @@ void Move::convertIdxToStr(Move &move) {
 
 bool Move::isNormal()
 {
-  return this->source_str.has_value() && this->destination_str.has_value() &&
-         !this->replacement.has_value();
+  return (this->source_str.has_value() && this->destination_str.has_value() && !this->replacement.has_value()) ||
+          (this->source_idx.has_value() && this->destination_idx.has_value() && !this->replacement.has_value());
 }
 
 bool Move::isPromotion()
 {
-  return this->source_str.has_value() && this->destination_str.has_value() &&
-         this->replacement.has_value();
+  return (this->source_str.has_value() && this->destination_str.has_value() && this->replacement.has_value()) ||
+          (this->source_idx.has_value() && this->destination_idx.has_value() && this->replacement.has_value());
 }
 
 bool Move::isDropIn()
 {
-  return !this->source_str.has_value() && this->destination_str.has_value() &&
-         this->replacement.has_value();
+  return (!this->source_str.has_value() && this->destination_str.has_value() && this->replacement.has_value()) ||
+          (!this->source_idx.has_value() && this->destination_idx.has_value() && this->replacement.has_value());
 }
 
 Move Move::moveTo(std::optional<std::string> source,
