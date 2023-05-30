@@ -93,33 +93,33 @@ std::size_t  Bot :: KeyHasher :: operator()(const Table &k) const {
       std::size_t seed = 0;
 
       // combine rows
-      // other idea : combine all rows using xor and then use that value
-      for(int i = 0; i < 8; i++) {
-        std::size_t row;
-        memcpy(&row, k.table[i], 8);
-        hash_combine(seed, row);
-      }
+      // // other idea : combine all rows using xor and then use that value
+      // for(int i = 0; i < 8; i++) {
+      //   std::size_t row;
+      //   memcpy(&row, k.table[i], 8);
+      //   hash_combine(seed, row);
+      // }
 
-      hash_combine(seed, this->operator()(k.last_move));
-      hash_combine(seed, k.rocinfo);
-      hash_combine(seed, std::pair<std::pair<int8_t, int8_t>,std::pair<int8_t, int8_t>>({k.wKx, k.wKy}, {k.bKx, k.bKy}));
+      // combine rows
+      hash_combine(seed, hash_value(std::tuple<size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t>{(std::size_t)k.table[0], (std::size_t)k.table[1], (std::size_t)k.table[3], (std::size_t)k.table[3],
+        (std::size_t)k.table[4], (std::size_t)k.table[5], (std::size_t)k.table[6], (std::size_t)k.table[7]}));
+
+      hash_combine(seed, hash_value(std::tuple<size_t, size_t, size_t, size_t, size_t, size_t>{this->operator()(k.last_move), (std::size_t)k.rocinfo, (std::size_t)k.wKx, (std::size_t)k.wKy, (std::size_t)k.bKx, (std::size_t)k.bKy}));
+
+      std::size_t cBw = 0, cBb = 0, pPw = 0, pPb = 0;
 
       for(auto p : k.capturedByWhite) {
-        hash_combine(seed, this->operator()(p));
+        cBw ^= p;
       }
 
       for(auto p : k.capturedByBlack) {
-        hash_combine(seed, this->operator()(p));
+        cBb ^= p;
       }
 
-      for(auto whatever : k.promotedPawnsWhite) {
-        hash_combine(seed, hash_value(whatever));
-      }
+      hash_combine(seed, hash_value(std::tuple<size_t, size_t, size_t, size_t>{cBw, cBb, pPw, pPb}));
 
-      for(auto whatever : k.capturedByBlack) {
-        hash_combine(seed, hash_value(whatever));
-      }
-      
+      // dont include promotebPawns (i think its hashed enough)
+
       return seed;
 }
 
@@ -211,16 +211,18 @@ int get_score_by_position(Piece piece, int x, int y) {
   return (int)(Bot::placement[x] * Bot::placement[y] * Bot::piece_scores.at(piece));
 }
 
-int evaluate(Table &table, PlaySide sideToMove) {
-  // check for checkmate and stalemate
-  // need a new parameter, last_move;
-  // if(Bot::isCheckMate(table, sideToMove))
-  //   return Bot::winScore;
 
-  // if(Bot::isStaleMate(table, sideToMove))
-  //   return Bot::drawScore;
+enum ENDGAME {
+  NOPE = 0,
+  CHECKMATE = 3,
+  STALEMATE = 4
+};
+
+
+int evaluate(Table &table, PlaySide sideToMove, ENDGAME value) {
   
-  // size_t hash = Bot::keyHasher(table) % Bot :: maxLenHT;
+  // compute hash for HAHTABLE 
+  //size_t hash = Bot::keyHasher(table) % Bot :: maxLenHT;
 
   // // search in HT;
   // if(Bot:: tablescoreHT[hash] != INT_MIN) {
@@ -228,6 +230,17 @@ int evaluate(Table &table, PlaySide sideToMove) {
   //   return Bot:: tablescoreHT[hash];
   // }
 
+  // check for checkmate and stalemate
+  if(value == ENDGAME::CHECKMATE) {
+    //Bot::tablescoreHT[hash] = Bot::winScore;  
+    return Bot::winScore;
+  }
+
+  if(value ==  ENDGAME::STALEMATE){
+    //Bot::tablescoreHT[hash] = Bot::drawScore;  
+    return Bot::drawScore;
+  }
+  
   int score = 0;
   
   for(int i = 0; i < 8; i++) {
@@ -384,24 +397,32 @@ int evalMove(Table &t, Move &m1, PlaySide myside) {
 std::pair<int, Move> Bot::alphabeta_negamax(int depth, PlaySide sideToMove, int alpha, int beta) {
     // STEP 1: game over or maximum recursion depth was reached
     
-    if(depth == 0) {
-      Move dummy;
-      return std::pair(evaluate(table, sideToMove), dummy);
-    }
-
     // malloc_stats();
     // std::cout.flush();
     // STEP 2: generate all possible moves for player
     // Note: sort moves descending by score (if possible) for maximizing the number of cut-off actions
     // (or generete the moves already sorted by a custom criterion)
+
+    // generate all possible moves so that we can see if we can checmkate or stalemate. regardless of depth
     std::vector<Move> allMoves;
     table.generateAllPossibleMoves(sideToMove, table.last_move, allMoves);
 
-    if (game_over(table, sideToMove, allMoves)) {
+    if (isCheckMate(table, sideToMove, allMoves)) {
        Move dummy;
-       return std::pair(evaluate(table, sideToMove), dummy);
+       return std::pair(evaluate(table, sideToMove, ENDGAME::CHECKMATE), dummy);
     }
 
+    if(isStaleMate(table, sideToMove, allMoves)) {
+      Move dummy;
+      return std::pair(evaluate(table, sideToMove, ENDGAME::STALEMATE), dummy);
+    }
+
+    if(depth == 0) {
+      Move dummy;
+      return std::pair(evaluate(table, sideToMove, ENDGAME::NOPE), dummy);
+    }
+
+    // SORT MOVES 
     // std::cout << depth << " ceplm1 " << allMoves.size() << "\n";
     // std::cout.flush();
     // std::sort(allMoves.begin(), allMoves.end(), [&t = table, s = sideToMove](Move &m1, Move &m2) {
