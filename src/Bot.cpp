@@ -5,7 +5,6 @@
 #include "Piece.h"
 #include "PieceHandlers.h"
 #include <malloc.h>
-#include <boost/functional/hash.hpp>
 
 #include <bits/stdc++.h>
 
@@ -15,7 +14,6 @@ const std::map<Piece, int> Bot::capt_piece_scores = {{NAP, 0},{PAWN, 10}, {KNIGH
 const std::vector<float> Bot::placement = {1, 1.1, 1.3, 1.5, 1.5, 1.3, 1.1, 1};
 
 const int Bot::maxLenHT = (1 << 29);
-const Bot::KeyHasher Bot::keyHasher;
 std::vector<int> Bot::tablescoreHT;
 
 const int Bot::winScore = INT_MAX;
