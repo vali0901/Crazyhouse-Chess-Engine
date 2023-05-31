@@ -50,6 +50,6 @@ run: Main
 	./Main
 
 zip:
-	zip -r Etapa1.zip ./src ./build ./include Makefile README.md
+	zip -r Etapa2.zip ./src ./build ./include Makefile README.md
 
 
