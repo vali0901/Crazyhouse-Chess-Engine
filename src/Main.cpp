@@ -103,7 +103,7 @@ static std::string serializeMove(Move* move) {
   return "resign";
 }
 
-static Move* deserializeMove(std::string s) {
+static Move deserializeMove(std::string s) {
   if (s[1] == '@') {
     /* Drop-in */
     std::optional<Piece> piece;
@@ -303,10 +303,9 @@ class EngineComponents {
     } else if (command == "usermove") {
       std::string movePayload;
       getline(command_stream, movePayload, ' ');
-      Move* incomingMove = deserializeMove(movePayload);
+      Move incomingMove = deserializeMove(movePayload);
 
-      processIncomingMove(incomingMove);
-      delete incomingMove;
+      processIncomingMove(&incomingMove);
     }
   }
 };

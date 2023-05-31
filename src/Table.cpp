@@ -260,7 +260,7 @@ void Table::generateAllPossibleMoves(PlaySide turn, Move last_move, std::vector<
 				if(piece == PAWN && (i == 0 || i == 7))
 					continue;
 				
-				moves.push_back(*Move::dropIn(std::pair(i, j), piece));
+				moves.push_back(Move::dropIn(std::pair(i, j), piece));
 			}
 		}
 	}

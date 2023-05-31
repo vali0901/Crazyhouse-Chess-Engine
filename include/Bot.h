@@ -17,6 +17,7 @@ class Bot {
   static const std::map <Piece, int> piece_scores;
   static const std::map<Piece, int> capt_piece_scores;
   static const std::vector<float> placement;
+  static const float protected_attackedPiece;
   static const int kingInCheck;
   static const int winScore;
   static const int drawScore;
@@ -24,7 +25,18 @@ class Bot {
   static const float attackedPiece;
   static const float attackedNAP;
   static const float attacker_buf;
+  struct KeyHasher {
+    std::size_t operator()(const Piece& k) const;
+    std::size_t operator()(const Move& k, Piece *src, Piece *dest) const;
+    std::size_t operator()(const Move& k) const;
+    std::size_t operator()(const std::vector<Move> &k) const;
+    std::size_t operator()(const Table &k) const;
+  };
+  static std::vector<int> tablescoreHT;
+  static const int maxLenHT;
+  static const KeyHasher keyHasher;
   Table table;
+  
   // PieceHandlers pieceHandler;
   /* Declare custom fields above */
   Bot();

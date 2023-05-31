@@ -52,10 +52,10 @@ class Move {
    * @param destination_str destination_str tile
    * @return move to be sent to board
    */
-  static Move* moveTo(std::optional<std::string> source,
+  static Move moveTo(std::optional<std::string> source,
                       std::optional<std::string> destination);
 
-  static Move* moveTo(std::optional<std::pair<int8_t, int8_t>> source,
+  static Move moveTo(std::optional<std::pair<int8_t, int8_t>> source,
                       std::optional<std::pair<int8_t, int8_t>> destination);
   /**
    * Emit a promotion move. Validity is to be checked by engine
@@ -65,10 +65,10 @@ class Move {
    * @param replacement piece to promote to (must not be pawn or king)
    * @return move to be sent to board
    */
-  static Move* promote(std::optional<std::string> source,
+  static Move promote(std::optional<std::string> source,
                        std::optional<std::string> destination,
                        std::optional<Piece> replacement);
-     static Move* promote(std::optional<std::pair<int8_t, int8_t>> source,
+     static Move promote(std::optional<std::pair<int8_t, int8_t>> source,
                          std::optional<std::pair<int8_t, int8_t>> destination,
                          std::optional<Piece> replacement);
   /**
@@ -79,12 +79,12 @@ class Move {
    * @param replacement
    * @return
    */
-  static Move* dropIn(std::optional<std::string> destination,
+  static Move dropIn(std::optional<std::string> destination,
                       std::optional<Piece> replacement);
-  static Move *dropIn(std::optional<std::pair<int8_t, int8_t>> destination,
+  static Move dropIn(std::optional<std::pair<int8_t, int8_t>> destination,
                    std::optional<Piece> replacement);
 
-  static Move* resign();
+  static Move resign();
 
   static void convertStrToIdx(Move &move);
   static void convertIdxToStr(Move &move);

@@ -170,15 +170,15 @@ void testTableStatsUpdater() {
 }
 
 void testMoveConvert() {
-    Move *move = Move::moveTo("a6", "`5");
-    Move::convertStrToIdx(*move);
-    printf("Source (%hhd, %hhd)\nDestination (%hhd, %hhd)\n", move->source_idx->first, move->source_idx->second, move->destination_idx->first, move->destination_idx->second);
+    Move move = Move::moveTo("a6", "`5");
+    Move::convertStrToIdx(move);
+    printf("Source (%hhd, %hhd)\nDestination (%hhd, %hhd)\n", move.source_idx->first, move.source_idx->second, move.destination_idx->first, move.destination_idx->second);
 
     std::pair a = {0, 0};
     std::pair b = {7, 7};
     move = Move::moveTo(a, b);
-    Move::convertIdxToStr(*move);
-    printf("Source %s\nDestination %s\n", move->source_str.value().c_str(), move->destination_str.value().c_str());
+    Move::convertIdxToStr(move);
+    printf("Source %s\nDestination %s\n", move.source_str.value().c_str(), move.destination_str.value().c_str());
 }
 
 void testGenerateMoves() {
@@ -188,9 +188,10 @@ void testGenerateMoves() {
     printTable(tableobj->table);
     printTableBits(tableobj->table);
 
-    Move *move = Move::moveTo("d7", "d5");
-    Move::convertStrToIdx(*move);
-    std::vector<Move> moves = tableobj->generateAllPossibleMoves(WHITE, *move);
+    Move move = Move::moveTo("d7", "d5");
+    Move::convertStrToIdx(move);
+    std::vector<Move> moves ;
+    tableobj->generateAllPossibleMoves(WHITE, move, moves);
 
     Move::convertIdxToStr(moves[0]);
 
