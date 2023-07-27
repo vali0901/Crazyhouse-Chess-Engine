@@ -1,15 +1,12 @@
-# en-passant
+# Crazyhouse Chess Engine
 
-## How the responsabilities were split between the memebers of our team
-- `Bobaru Valentin & Ciocoiu Diana` -> PieceHandlers - generating all possible moves for every kind of piece
-- `Calota Darius` -> worked on the Table class - updating the states of the squares, getting together all the possible moves generated, initializing the table at the start position etc.
-- `Mazilu Flavius` -> record incoming move/sent move on the table, considering en passant, castling, drop in, promotion and regular moves.   
-***SIDENOTE***: You might see `commits on github` only by a part of our team, reason being that few of us were not comfortable enough with working with git branching, conflicts and so on, and was more efficient to send us what they worked on and commit on their behalf.
-
----
 ## How to compile
     make build
----
+
+## How to run
+
+This engine can be tested with [Xboard](https://www.gnu.org/software/xboard/).
+
 
 ## Structure
 - `src`:
